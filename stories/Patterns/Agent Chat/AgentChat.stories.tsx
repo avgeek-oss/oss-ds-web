@@ -59,7 +59,6 @@ function SimulatedChat({
       onClose={() => undefined}
       describeTool={describeServiceTool}
       suggestions={serviceSuggestions}
-      footnote="The assistant can read and change your services. Check its work."
       {...(withHistory
         ? {
             conversations,

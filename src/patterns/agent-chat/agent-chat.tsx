@@ -108,8 +108,6 @@ export interface AgentChatProps {
   suggestions?: readonly string[];
   emptyDescription?: ReactNode;
   placeholder?: string;
-  /** Short note under the composer, such as data-handling guidance. */
-  footnote?: ReactNode;
   /** Supplying conversations adds the history view. */
   conversations?: readonly AgentConversationSummary[];
   activeConversationId?: string | null;
@@ -159,7 +157,6 @@ export function AgentChat({
   suggestions,
   emptyDescription,
   placeholder,
-  footnote,
   conversations,
   activeConversationId,
   onSelectConversation,
@@ -260,12 +257,6 @@ export function AgentChat({
             onStop={onStop}
             onSend={onSend}
             placeholder={placeholder ?? `Ask ${productName}…`}
-            hint={
-              status === "awaiting_confirmation"
-                ? "Approve or decline the action above to continue."
-                : undefined
-            }
-            footnote={footnote}
           />
         </>
       )}
@@ -503,39 +494,42 @@ function ToolActivity({
 }) {
   const statusIcon =
     item.status === "pending" ? (
-      <Spinner size="sm" color="current" aria-hidden="true" />
+      <Spinner
+        size="sm"
+        color="current"
+        aria-hidden="true"
+        className="size-3.5"
+      />
     ) : item.status === "succeeded" ? (
-      icon(CheckmarkCircle02Icon, "size-4 text-success")
+      icon(CheckmarkCircle02Icon, "size-3.5 text-success")
     ) : item.status === "declined" ? (
-      icon(CancelCircleIcon, "size-4")
+      icon(CancelCircleIcon, "size-3.5")
     ) : (
-      icon(Alert02Icon, "size-4 text-danger")
+      icon(Alert02Icon, "size-3.5 text-danger")
     );
   return (
-    <div className="flex min-w-0 gap-2 text-xs text-muted">
-      <span className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center">
-        {statusIcon}
-      </span>
-      <span className="grid min-w-0 gap-0.5">
-        <span className="flex min-w-0 flex-wrap items-center gap-x-1.5">
-          <span className="font-medium text-foreground">
-            {presentation.label}
-          </span>
-          {item.origin === "client" ? (
-            <span className="inline-flex items-center gap-1">
-              {icon(Cursor01Icon, "size-3")}
-              in this page
-            </span>
-          ) : null}
-          <span className="sr-only">, </span>
-          <span className={cn(item.status === "failed" && "text-danger")}>
-            {statusText[item.status]}
-          </span>
+    <div className="grid min-w-0 gap-0.5 text-xs text-muted">
+      <span className="flex min-w-0 flex-wrap items-center gap-x-1.5">
+        <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
+          {statusIcon}
         </span>
-        {item.summary && item.status !== "succeeded" ? (
-          <span className="line-clamp-2 break-words">{item.summary}</span>
+        <span className="font-medium text-foreground">
+          {presentation.label}
+        </span>
+        {item.origin === "client" ? (
+          <span className="inline-flex items-center gap-1">
+            {icon(Cursor01Icon, "size-3")}
+            in this page
+          </span>
         ) : null}
+        <span className="sr-only">, </span>
+        <span className={cn(item.status === "failed" && "text-danger")}>
+          {statusText[item.status]}
+        </span>
       </span>
+      {item.summary && item.status !== "succeeded" ? (
+        <span className="line-clamp-2 break-words ps-5">{item.summary}</span>
+      ) : null}
     </div>
   );
 }
@@ -617,16 +611,12 @@ function Composer({
   onStop,
   onSend,
   placeholder,
-  hint,
-  footnote,
 }: {
   busy: boolean;
   canStop: boolean;
   onStop?: () => void;
   onSend: (text: string) => void;
   placeholder: string;
-  hint?: string;
-  footnote?: ReactNode;
 }) {
   const [draft, setDraft] = useState("");
   const field = useRef<HTMLTextAreaElement>(null);
@@ -677,7 +667,7 @@ function Composer({
             aria-label="Stop"
             className="shrink-0"
             isIconOnly
-            variant="secondary"
+            size="lg"
             onPress={onStop}
           >
             {icon(StopIcon)}
@@ -688,15 +678,13 @@ function Composer({
             className="shrink-0"
             isDisabled={!canSend}
             isIconOnly
+            size="lg"
             type="submit"
           >
             {icon(ArrowUp02Icon)}
           </Button>
         )}
       </div>
-      {hint || footnote ? (
-        <p className="px-1 pt-2 text-xs text-muted">{hint ?? footnote}</p>
-      ) : null}
     </form>
   );
 }
