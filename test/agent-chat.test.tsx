@@ -84,7 +84,7 @@ test("assistant Markdown renders structure without interpreting HTML or unsafe l
       text={[
         "## Summary",
         "Use **bold**, `code` and [docs](https://example.test/docs).",
-        "[bad](javascript:alert(1)) <script>alert(1)</script>",
+        "[bad](javascript:alert(1)) <script>alert(1)</script> <SCRIPT>alert(2)</SCRIPT>",
         "",
         "- one",
         "- two",
@@ -106,9 +106,10 @@ test("assistant Markdown renders structure without interpreting HTML or unsafe l
     html,
     /<a href="https:\/\/example\.test\/docs" target="_blank" rel="noopener noreferrer"/,
   );
-  assert.doesNotMatch(html, /href="javascript:/);
-  assert.doesNotMatch(html, /<script>/);
+  assert.doesNotMatch(html, /href="javascript:/i);
+  assert.doesNotMatch(html, /<script\b/i);
   assert.match(html, /&lt;script&gt;/);
+  assert.match(html, /&lt;SCRIPT&gt;/);
   assert.match(html, /<ul[^>]*><li[^>]*>one<\/li><li[^>]*>two<\/li><\/ul>/);
   assert.match(html, /<blockquote[^>]*>quoted draft<\/blockquote>/);
   assert.match(html, /<th scope="col"[^>]*>A<\/th>/);
