@@ -34,6 +34,13 @@ jobs:
         run: |
           echo "::error::Run this workflow from main. Releases are cut from the head of main only."
           exit 1
+      - name: Note the mode
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "**Dry run.** Checks only; nothing is tagged or published." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "**Release.** If every check passes, this run tags main and starts publishing." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
@@ -79,10 +86,17 @@ jobs:
           fi
       - name: Check main verification passed for this commit
         run: |
-          state=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" \
-            --jq '[.check_runs[] | select(.name == "verify")] | sort_by(.completed_at) | last | .conclusion // .status')
-          if [ "$state" != "success" ]; then
-            echo "::error::The verify job for $GITHUB_SHA is '$state', not success. Wait for main to go green."
+          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&per_page=10" \
+            --jq '([.workflow_runs[] | select(.event == "push")] | sort_by(.created_at) | last) // empty | [.status, (.conclusion // "-"), .html_url] | @tsv')
+          if [ -z "$run" ]; then
+            echo "::error::No 'Validate and publish' run exists for $GITHUB_SHA yet. It appears once the push to main is processed; try again in a minute."
+            exit 1
+          fi
+          status=$(printf '%s' "$run" | cut -f1)
+          conclusion=$(printf '%s' "$run" | cut -f2)
+          url=$(printf '%s' "$run" | cut -f3)
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::'Validate and publish' for $GITHUB_SHA is $status ($conclusion), not success: $url. Main verifies one commit at a time, so a queued run waits for earlier ones. Run this again once it passes."
             exit 1
           fi
       - name: Plan
