@@ -39,6 +39,13 @@ Apps fetch, authorize and persist; patterns own layout, copy and states.
 - `FilterDialog` keeps a draft until Apply; Cancel keeps committed filters. The app defines fields and operators.
 - Use `ExpandableAttributeList` when only some rows have details; `Attributes` when none do.
 
+## Assistant
+
+- Put `AgentChat` in `AppLayout`'s `aside` and `AgentChatTrigger` in `ApplicationNavbar`'s `actions`.
+- Give each tool a short action label through `describeTool`; add `detail` when an approval needs its consequence.
+- Approvals appear inline; the server decides which tools need them. A new message declines waiting actions.
+- Replies render a Markdown subset; raw HTML is never interpreted.
+
 ## Notifications and operations
 
 - `NotificationMenu` shows incoming notifications; use its explicit **Mark all as read**.

@@ -143,4 +143,6 @@ export * from "../src/pickers/date-range-picker.js";
 export * from "../src/pickers/range-calendar.js";
 export * from "../src/forms/time-field.js";
 export * from "../src/patterns/date-time-range-picker.js";
+export * from "../src/patterns/agent-chat/agent-chat.js";
+export * from "../src/patterns/agent-chat/agent-chat-trigger.js";
 export { parseDate, parseDateTime, parseTime } from "@internationalized/date";

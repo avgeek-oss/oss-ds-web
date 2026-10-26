@@ -41,6 +41,7 @@ const groupOrder = [
   "Navigation",
   "Overlays",
   "Layouts",
+  "Assistant",
   "Auth",
   "Account settings",
   "Team settings",

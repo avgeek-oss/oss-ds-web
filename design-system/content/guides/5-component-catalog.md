@@ -61,4 +61,5 @@ Primitives keep HeroUI's native variants. Patterns are complete, reviewed surfac
 - Auth: `SignIn`, `ForgotPassword`, `VerificationEmail`, `PasswordSetup`, `PasskeyVerification`, `RecoveryCodesScreen`, `TeamSetup`, `AcceptInvitation`, `McpAuthorization`.
 - Account: `ProfileSettings`, `PreferencesSettings`, `PasskeySettings`, `SessionsSettings`, `ApiKeysSettings`, `McpGuideSettings`.
 - Team: `MembersTable`, `InvitationsTable`, `InviteMemberDialog`, `TeamGeneralSettings`.
+- Assistant: `AgentChat` (panel in `AppLayout`'s `aside`), `AgentChatTrigger` (navbar button).
 - Data: `HistoryTable`, `FilterDialog`, `OperationProgress`, `IntegrationConnectionCard`, `NotificationMenu`, `NotificationDestinationsSettings`.
