@@ -79,9 +79,16 @@ jobs:
             echo "::error::Tag $TAG already exists."
             exit 1
           fi
-          published=$(npm view "$PACKAGE@$VERSION" version 2>/dev/null || true)
-          if [ -n "$published" ]; then
+          # Only a 404 proves the version is absent. Any other failure, such
+          # as a registry outage, must not let a tag through unchecked.
+          output=$(npm view "$PACKAGE@$VERSION" version 2>&1) && code=0 || code=$?
+          if [ "$code" -eq 0 ] && [ -n "$output" ]; then
             echo "::error::$PACKAGE@$VERSION is already on npm."
+            exit 1
+          fi
+          if [ "$code" -ne 0 ] && ! printf '%s' "$output" | grep -q "E404"; then
+            echo "::error::Could not check npm for $PACKAGE@$VERSION (exit $code). Nothing was tagged."
+            printf '%s\n' "$output"
             exit 1
           fi
       - name: Check main verification passed for this commit
