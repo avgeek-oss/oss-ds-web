@@ -4,6 +4,9 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
+  # The Cut release workflow starts this on a tag it created. A tag pushed
+  # with the workflow token does not trigger the push event above.
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -42,7 +45,7 @@ jobs:
             storybook-static/
             artifacts/
   publish:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: verify
     runs-on: ubuntu-latest
     permissions:
