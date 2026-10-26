@@ -6,6 +6,7 @@
 - `AppShell.Content` owns 16px side gutters, no top padding and 80px bottom padding.
 - `ApplicationPage` owns 20px above and below the title. Never add another top padding or gap around content.
 - Page headings wrap by default. Set `titleOverflow="truncate"` to keep title and actions on one row; keep action groups compact.
+- `AppLayout`'s optional `aside` docks a 26rem panel beside the page from 64rem and is a full-width right drawer below; only one drawer opens at a time.
 - Auth below 640px: top-aligned, 32px vertical and 16px horizontal padding plus safe-area insets. Desktop: centered, 24px gutters.
 
 ## Navigation
