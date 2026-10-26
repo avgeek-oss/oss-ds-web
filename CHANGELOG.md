@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-10-26
 
 - Add the `AgentChat` panel and `AgentChatTrigger` for assistant conversations, with inline approvals for actions that change data, client-tool activity, conversation history and a safe Markdown subset for replies.
 - Add an optional right-hand `aside` to `AppLayout`: a docked column on desktop and a full-width drawer on small screens, one drawer at a time.
