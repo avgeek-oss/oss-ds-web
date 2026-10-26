@@ -69,7 +69,8 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Check the changelog has an entry
         run: |
-          if ! grep -Eq "^## ${VERSION}( |$)" CHANGELOG.md; then
+          escaped=$(printf '%s' "$VERSION" | sed 's/[.]/\\./g')
+          if ! grep -Eq "^## ${escaped}( |$)" CHANGELOG.md; then
             echo "::error::CHANGELOG.md has no '## ${VERSION}' section. Add and date it before releasing."
             exit 1
           fi
@@ -123,6 +124,11 @@ jobs:
       - name: Create and push the tag
         if: ${{ !inputs.dry_run }}
         run: |
+          live=$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)
+          if [ "$live" != "$GITHUB_SHA" ]; then
+            echo "::error::main moved to ${live:0:7} while this run checked ${GITHUB_SHA:0:7}. Nothing was tagged; run again on the new head."
+            exit 1
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" "$GITHUB_SHA" -m "Release $TAG"
