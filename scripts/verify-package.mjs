@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { setTimeout } from "node:timers/promises";
 import { createHash } from "node:crypto";
 import {
   mkdtemp,
@@ -27,20 +28,46 @@ const run = (command, args, cwd = repository) =>
     stdio: "inherit",
     env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
   });
+// Like run, but keeps stderr so the caller can decide whether to retry.
+const runCapturingErrors = (command, args) =>
+  execFileSync(command, args, {
+    cwd: repository,
+    stdio: ["inherit", "inherit", "pipe"],
+    env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" },
+  });
+const isVersionNotYetVisible = (error) => {
+  const stderr = String(error?.stderr ?? "");
+  process.stderr.write(stderr);
+  return /\b(ETARGET|E404)\b/.test(stderr);
+};
 const writeJson = (file, value) =>
   writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
 
 try {
   await mkdir(artifacts, { recursive: true });
   if (published) {
-    run("npm", [
+    // The registry can take a minute to serve a version right after it is
+    // published, so a "no matching version" answer is retried for a while.
+    const packArguments = [
       "pack",
       `${manifest.name}@${manifest.version}`,
       "--registry=https://registry.npmjs.org",
       "--ignore-scripts",
       "--pack-destination",
       temporary,
-    ]);
+    ];
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        runCapturingErrors("npm", packArguments);
+        break;
+      } catch (error) {
+        if (attempt === 12 || !isVersionNotYetVisible(error)) throw error;
+        console.log(
+          `${manifest.name}@${manifest.version} is not visible on the registry yet (attempt ${attempt}); retrying in 10s`,
+        );
+        await setTimeout(10_000);
+      }
+    }
   } else {
     run(pnpm, ["pack", "--pack-destination", temporary]);
   }
