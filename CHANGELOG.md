@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1 — 2026-10-26
+
+- Point `repository.url` at `avgeek-oss/oss-ds-web`. npm now rejects a provenance-signed publish whose manifest names a different repository, which blocked the 1.3.0 publish; 1.3.1 carries the same changes as 1.3.0.
+
 ## 1.3.0 — 2026-10-26
 
 - Add the `AgentChat` panel and `AgentChatTrigger` for assistant conversations, with inline approvals for actions that change data, client-tool activity, conversation history and a safe Markdown subset for replies.
