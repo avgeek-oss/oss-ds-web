@@ -56,6 +56,52 @@ Towbar implements these responsibilities in its notification-center API and rece
 
 `onActivate` awaits an app-owned action, locks repeated ordinary clicks and keyboard activation, and reports a rejection through one toast while retaining the menu. Modified link clicks retain native navigation. Opening the menu never invokes activation. The app owns navigation and must ignore obsolete asynchronous results after its menu session or route changes; the shared menu likewise prevents an old completion from closing a reopened popover.
 
+## Agent chat
+
+`AgentChat` is the shared assistant panel: transcript, approvals for actions that change data, and the composer. Place it in `AppLayout`'s `aside` and put `AgentChatTrigger` in `ApplicationNavbar`'s `actions`. On desktop the panel docks beside the page so the page stays usable while client tools act on it. Below 64rem it opens as a full-width right drawer, and AppLayout closes the navigation drawer while it is open.
+
+```tsx
+const chat = useAgentChat({ endpoint: "/v1/agent", clientTools });
+const [open, setOpen] = useState(false);
+
+<AppLayout
+  aside={
+    <AgentChat
+      productName="Vitalog"
+      {...chat.state}
+      onSend={chat.send}
+      onDecide={chat.decide}
+      onStop={chat.stop}
+      onNewConversation={chat.reset}
+      onClose={() => setOpen(false)}
+      describeTool={describeVitalogTool}
+    />
+  }
+  asideOpen={open}
+  onAsideOpenChange={setOpen}
+  navbar={
+    <ApplicationNavbar
+      actions={
+        <AgentChatTrigger
+          isOpen={open}
+          onOpenChange={setOpen}
+          needsAttention={chat.state.pending.length > 0}
+        />
+      }
+    />
+  }
+/>;
+```
+
+The props mirror the state of `useAgentChat` from `@avgeek-oss/agent-react`; this package does not depend on it. Apps own the agent server, tool permissions and conversation storage.
+
+- Give each tool a short action label through `describeTool`, for example "Log 30 g protein". Supply `detail` for approvals that need a consequence, such as a post publishing externally. Unnamed tools fall back to a readable form of the tool name.
+- Approvals appear inline where the model asked for them. The server decides which tools need approval; the panel only presents them. The composer stays available, and a new message declines waiting actions.
+- Assistant replies render a Markdown subset: paragraphs, headings, lists, quotes, fenced code, tables, emphasis, inline code and http(s) links. Raw HTML is never interpreted.
+- `suggestions` seed an empty conversation. Keep them specific to the product's data.
+- Supplying `conversations` adds the history view. `onDeleteConversation` confirms first and reports a failure with one toast.
+- Failures use the `error` alert. Show `onRetry` only when the app can repeat the request.
+
 ## Notification settings
 
 `NotificationDestinationsSettings` is the configuration surface for outgoing notifications; `NotificationMenu` displays incoming notifications. A destination supplies `id`, `label`, optional description/icon, and subscriptions keyed by category ID. Each category declares a label and allowed modes: `off`, `all`, or `failures`. Two-mode categories render checkboxes; failure-aware categories render All/Failures only choices and Clear when Off is allowed.

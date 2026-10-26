@@ -24,6 +24,8 @@ Set a navigation item's `activePath` when its destination is one child of a sect
 
 Matching internal primary links expose `aria-current="page"` using the same rule as their visual selection. Account and Team descendants retain their owning section; similar prefixes such as `/settings-archive` and `/teams` do not match. `preserveSubroute` keeps the current child route when its owning primary link is activated. External links do not expose a current-page state.
 
+`AppLayout` accepts an optional right-hand `aside`, used by the [agent chat](patterns.md#agent-chat). From 64rem it is a docked 26rem column beside the page, and the page narrows instead of being covered. Override the width with `--app-layout-aside-width`. Below 64rem it is a full-width right drawer. Only one drawer is open on small screens: opening the aside closes navigation, and opening navigation closes the aside. Control it with `asideOpen` and `onAsideOpenChange`, and name it with `asideLabel`. When the desktop aside closes with focus inside, focus returns to the control marked `data-app-aside-trigger`, which `AgentChatTrigger` sets.
+
 The shared navigation toggle uses the same arrow-free `PanelLeftIcon` when the menu is open or closed. The icon is 20px inside the 44px circular header button, with a 12px inset from the header's left edge. The mobile drawer close action uses the same 20px icon within its native 44px control. Both toggle states retain the same hit area, accessible name, and expanded state.
 
 Primary and secondary sidebar items use HeroUI’s native menu-item styles, including the 36px minimum height, padding, hover and focus states. Sidebar links remain navigation links.

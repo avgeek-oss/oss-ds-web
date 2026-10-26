@@ -55,6 +55,20 @@ export {
   type NotificationItem,
   type NotificationMenuProps,
 } from "./patterns/notifications.js";
+export {
+  AgentChat,
+  humanizeToolName,
+  type AgentChatItem,
+  type AgentChatPendingCall,
+  type AgentChatProps,
+  type AgentChatStatus,
+  type AgentConversationSummary,
+  type AgentToolPresentation,
+} from "./patterns/agent-chat/agent-chat.js";
+export {
+  AgentChatTrigger,
+  type AgentChatTriggerProps,
+} from "./patterns/agent-chat/agent-chat-trigger.js";
 export { SidebarAccountMenu } from "./patterns/sidebar-account-menu.js";
 
 export { SignIn, type SignInProps } from "./patterns/auth/sign-in.js";
