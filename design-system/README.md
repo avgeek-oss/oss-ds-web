@@ -14,8 +14,7 @@ pnpm design-system --check  # also renders every card in light and dark
 | `src/`, `src/styles/globals.css` | Components, bundle CSS, resolved color values |
 | `tokens.mjs`                     | Token names, usage notes, aliases             |
 | `previews/<Name>.tsx`            | A component's card                            |
-| `content/`                       | Brand book, component guides, cover           |
-| `docs/`                          | Guides                                        |
+| `content/`                       | Brand book, guides, component guides, cover   |
 
 ## Adding a card
 
@@ -27,4 +26,4 @@ pnpm design-system --check  # also renders every card in light and dark
 
 The script never uploads. In Claude Code, ask Claude to publish `artifacts/design-system` to the artifact URL; `publish.json` lists the files and index values.
 
-Edits made on the artifact page are overwritten by the next publish. Copy them into `content/` or `tokens.mjs` first.
+Edits made on the artifact page are overwritten by the next publish. Copy them into `content/` or `tokens.mjs` first. The guides in `content/guides/` are condensed from `docs/`; update both when a contract changes.

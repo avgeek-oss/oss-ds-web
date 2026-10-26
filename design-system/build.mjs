@@ -46,13 +46,6 @@ const groupOrder = [
   "Team settings",
   "Data patterns",
 ];
-const guides = [
-  ["layouts.md", "1-layouts.md"],
-  ["forms.md", "2-forms-and-feedback.md"],
-  ["patterns.md", "3-patterns.md"],
-  ["emails-and-loading.md", "4-emails-and-loading.md"],
-  ["components.md", "5-component-catalog.md"],
-];
 const icons = [
   "PanelLeftIcon",
   "Menu01Icon",
@@ -228,7 +221,7 @@ const tokens = {
       ],
       fonts: ["@fontsource-variable/inter", "@fontsource-variable/geist-mono"],
       assets: ["studio/assets", "@hugeicons/core-free-icons"],
-      docs: ["docs"],
+      docs: ["design-system/content"],
     },
     synced: new Date().toISOString().slice(0, 10),
   },
@@ -362,7 +355,7 @@ await write(
   `// Avgeek OSS Design System — public component types from the package build (@avgeek-oss/design-system).\n// Documentation only: each block is one source module; imports refer to the package dependencies.\n\n${typeBlocks.join("\n")}`,
 );
 
-log("Copying content, guides and fonts");
+log("Copying content and fonts");
 async function copyTree(from, to) {
   for (const entry of await readdir(from, { withFileTypes: true })) {
     const source = path.join(from, entry.name);
@@ -377,14 +370,6 @@ async function copyTree(from, to) {
 await copyTree(path.join(here, "content"), project);
 for (const { name } of cards) {
   await readFile(path.join(project, "components", name, "README.md"));
-}
-for (const [source, target] of guides) {
-  const text = await readFile(path.join(repo, "docs", source), "utf8");
-  // Repository-relative links do not resolve inside the system; keep their text.
-  await write(
-    path.join(project, "guides", target),
-    text.replace(/\[([^\]]+)\]\((?!https?:)[^)]+\)/g, "$1"),
-  );
 }
 await mkdir(path.join(project, "fonts"), { recursive: true });
 for (const font of definitions.typography.fonts) {
