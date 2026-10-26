@@ -645,7 +645,7 @@ function Composer({
         <Textarea
           ref={field}
           aria-label="Message"
-          className="max-h-40 min-h-10 flex-1 resize-none"
+          className="max-h-40 flex-1 resize-none py-2.5"
           placeholder={placeholder}
           rows={1}
           value={draft}
