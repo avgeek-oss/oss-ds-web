@@ -53,6 +53,8 @@ Keep tests lean and organized around shared behavior. Add regression cases to th
 
 Review changed UI in Storybook at desktop and mobile widths, in light and dark themes. Exercise keyboard interaction, long content, empty/pending/failure states, focus return, and overflow where relevant. Fixture simulation proves a UI contract, not backend security or app compatibility.
 
+When a public component changes, update its card in `design-system/` and run `pnpm design-system --check`. See [design-system/README.md](design-system/README.md).
+
 Keep public documentation focused on installation, component contracts, design rules, contributor instructions, and release notes. Do not commit review diaries, verification transcripts, business plans, app migration schedules, empty placeholder Markdown files, or generated logs. Generated package candidates and reports belong in the ignored `artifacts/` directory.
 
 Preserve unrelated work. Publishing or deployment requires explicit authorization and is never a side effect of a UI change. Distinguish local verification, CI, and registry publication when reporting results.
