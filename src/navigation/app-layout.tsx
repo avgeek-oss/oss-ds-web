@@ -37,6 +37,9 @@ const isDesktopViewport = () => window.matchMedia(desktopQuery).matches;
 const serverViewport = () => false;
 
 export function AppLayout({
+  aside,
+  asideLabel = "Assistant",
+  asideOpen = false,
   children,
   className,
   footer,
@@ -45,8 +48,17 @@ export function AppLayout({
   onSidebarOpenChange,
   sidebar,
   sidebarOpen = true,
+  onAsideOpenChange,
   toggleShortcut = false,
 }: {
+  /**
+   * Optional right-hand panel, such as the agent chat. Docked beside the page
+   * on desktop so the page stays usable; a right drawer on smaller screens.
+   */
+  aside?: ReactNode;
+  asideLabel?: string;
+  asideOpen?: boolean;
+  onAsideOpenChange?: (open: boolean) => void;
   children: ReactNode;
   className?: string;
   footer?: ReactNode;
@@ -64,6 +76,7 @@ export function AppLayout({
   const previousPathname = useRef(pathname);
   const root = useRef<HTMLDivElement>(null);
   const hasSidebar = Boolean(sidebar);
+  const hasAside = Boolean(aside);
   const [drawerMounted, setDrawerMounted] = useState(false);
   const wasDrawerMounted = useRef(false);
   const [restoringFocus, setRestoringFocus] = useState(false);
@@ -114,7 +127,9 @@ export function AppLayout({
     if (
       isDesktop &&
       !sidebarOpen &&
-      root.current?.querySelector("aside")?.contains(document.activeElement)
+      root.current
+        ?.querySelector("aside#application-navigation")
+        ?.contains(document.activeElement)
     ) {
       root.current
         .querySelector<HTMLButtonElement>(".navigation-toggle")
@@ -154,6 +169,35 @@ export function AppLayout({
     });
     return () => cancelAnimationFrame(frame);
   }, [drawerMounted, isDesktop, sidebarOpen]);
+
+  // Small screens show one drawer at a time: the one opened last wins.
+  const previousAsideOpen = useRef(false);
+  const previousNavigationOpen = useRef(sidebarOpen);
+  useEffect(() => {
+    const asideOpened = asideOpen && !previousAsideOpen.current;
+    const navigationOpened = sidebarOpen && !previousNavigationOpen.current;
+    previousAsideOpen.current = asideOpen;
+    previousNavigationOpen.current = sidebarOpen;
+    if (isDesktop || !hasAside || !asideOpen || !sidebarOpen) return;
+    if (navigationOpened && !asideOpened) onAsideOpenChange?.(false);
+    else onSidebarOpenChange?.(false);
+  }, [
+    asideOpen,
+    hasAside,
+    isDesktop,
+    onAsideOpenChange,
+    onSidebarOpenChange,
+    sidebarOpen,
+  ]);
+
+  useLayoutEffect(() => {
+    const panel = root.current?.querySelector("aside[data-slot='app-aside']");
+    if (isDesktop && !asideOpen && panel?.contains(document.activeElement)) {
+      root.current
+        ?.querySelector<HTMLButtonElement>("[data-app-aside-trigger]")
+        ?.focus({ preventScroll: true });
+    }
+  }, [asideOpen, isDesktop]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setMotionReady(true));
@@ -218,6 +262,8 @@ export function AppLayout({
             ref={root}
             data-sidebar-open={sidebarOpen}
             data-has-sidebar={hasSidebar && isDesktop}
+            data-has-aside={hasAside && isDesktop}
+            data-aside-open={asideOpen}
             data-motion-ready={motionReady}
             className={cn("min-h-dvh", styles.layout, className)}
           >
@@ -231,12 +277,49 @@ export function AppLayout({
                 <div className={styles.sidebarPanel}>{visible.sidebar}</div>
               </aside>
             ) : null}
-            <div className="grid min-h-dvh min-w-0 grid-cols-1 grid-rows-[auto_1fr_auto]">
+            <div
+              className={cn(
+                "grid min-h-dvh min-w-0 grid-cols-1 grid-rows-[auto_1fr_auto]",
+                styles.mainColumn,
+              )}
+            >
               {visible.navbar}
               <main className="min-w-0">{visible.children}</main>
               {footer}
             </div>
+            {aside && isDesktop ? (
+              <aside
+                aria-label={asideLabel}
+                aria-hidden={!asideOpen}
+                inert={!asideOpen}
+                className={styles.desktopAside}
+                data-slot="app-aside"
+              >
+                <div className={styles.asidePanel}>{aside}</div>
+              </aside>
+            ) : null}
           </div>
+          {aside ? (
+            <Drawer.Backdrop
+              className={styles.drawerBackdrop}
+              isOpen={asideOpen && !isDesktop}
+              onOpenChange={onAsideOpenChange}
+            >
+              <Drawer.Content placement="right">
+                <Drawer.Dialog
+                  aria-label={asideLabel}
+                  className={cn(
+                    "grid max-w-none overflow-hidden bg-background p-0",
+                    styles.asideDrawerDialog,
+                  )}
+                >
+                  <div className="min-h-0 min-w-0" data-slot="drawer-body">
+                    {aside}
+                  </div>
+                </Drawer.Dialog>
+              </Drawer.Content>
+            </Drawer.Backdrop>
+          ) : null}
           {sidebar ? (
             <Drawer.Backdrop
               className={styles.drawerBackdrop}

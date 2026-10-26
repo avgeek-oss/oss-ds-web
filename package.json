@@ -453,6 +453,14 @@
       "types": "./dist/patterns/notifications.d.ts",
       "import": "./dist/patterns/notifications.js"
     },
+    "./patterns/agent-chat/agent-chat": {
+      "types": "./dist/patterns/agent-chat/agent-chat.d.ts",
+      "import": "./dist/patterns/agent-chat/agent-chat.js"
+    },
+    "./patterns/agent-chat/agent-chat-trigger": {
+      "types": "./dist/patterns/agent-chat/agent-chat-trigger.d.ts",
+      "import": "./dist/patterns/agent-chat/agent-chat-trigger.js"
+    },
     "./patterns/sidebar-account-menu": {
       "types": "./dist/patterns/sidebar-account-menu.d.ts",
       "import": "./dist/patterns/sidebar-account-menu.js"

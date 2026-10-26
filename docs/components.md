@@ -75,6 +75,8 @@ The additional shared application patterns follow Towbar's common surfaces. Thei
 | `ActionConfirmation`                     | `patterns/actions/action-confirmation`                               |
 | `QueryLoading`, `QueryError`             | `patterns/feedback/query-state`                                      |
 | `ChoiceField`                            | `patterns/choice-field`                                              |
+| `AgentChat`                              | `patterns/agent-chat/agent-chat`                                     |
+| `AgentChatTrigger`                       | `patterns/agent-chat/agent-chat-trigger`                             |
 
 | Storybook primitive                       | Source file                                                                           |
 | ----------------------------------------- | ------------------------------------------------------------------------------------- |
