@@ -1,20 +1,9 @@
 # Skeleton
 
-HeroUI's placeholder block for content that is loading.
+Placeholder block for loading content.
 
-## When to use
+**Use for** individual loading pieces. Use `LoadingSkeleton` for page-level loading.
 
-Use to sketch individual pieces of loading content. Use `LoadingSkeleton` with `SkeletonCard` for page-level loading with one accessible busy status.
+**Props** size via `className` or `style`; `animationType` shimmer · pulse · none.
 
-## What the consumer provides
-
-Dimensions through `className` or `style`; `animationType`.
-
-## Key props
-
-- `animationType`: `shimmer` (default) · `pulse` · `none`; animation stops under reduced motion.
-
-## Do / Don't
-
-- Do match the eventual content's size and arrangement.
-- Don't leave skeletons in place after a load fails; show the error instead.
+**Don't** leave skeletons after a load fails; show the error.

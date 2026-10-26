@@ -1,19 +1,9 @@
 # McpGuideSettings
 
-Client selector, configuration code and the MCP setup and troubleshooting link.
+Client selector and configuration code for connecting an MCP client.
 
-## When to use
+**Use for** the MCP Connections page.
 
-On the MCP Connections page, to show how to configure each supported client.
+**Provide** `configurations` (`id`, `label`, `filename`, `code`, optional `icon`) and `documentationUrl`.
 
-## What the consumer provides
-
-`configurations` (`id`, `label`, optional `icon`, `filename`, `code`) and `documentationUrl`.
-
-## Key behavior
-
-- The selector is compact on desktop and full width on mobile; code keeps the widget width.
-
-## Do / Don't
-
-- Don't add app-specific connection descriptions below it; keep extra prose in the documentation.
+**Don't** add app-specific connection descriptions below it.

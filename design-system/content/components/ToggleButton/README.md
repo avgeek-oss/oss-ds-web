@@ -1,22 +1,9 @@
 # ToggleButton
 
-A HeroUI on/off button, alone or in a `ToggleButtonGroup` for a single or multiple choice among a few options.
+On/off button, alone or in a `ToggleButtonGroup`.
 
-## When to use
+**Use for** pressed-state options such as a Day/Week/Month switch. Use `Switch` for settings, `Tabs` for views and `Button` for actions.
 
-- Pressed-state options such as Compare or a Day/Week/Month range switch.
-- Use `Switch` for a setting that persists, `Tabs` for switching views, and `Button` for one-shot actions.
+**Props** `isSelected`, `onChange`; `variant` default · ghost; `size` sm · md · lg; group `selectionMode`, `selectedKeys`, `aria-label`.
 
-## What the consumer provides
-
-- `children`, `isSelected`/`defaultSelected` and `onChange`; in a group, an `id` per button.
-- `ToggleButtonGroup`: `selectionMode` (`single` or `multiple`), `selectedKeys`/`defaultSelectedKeys`, `onSelectionChange`, and an `aria-label`.
-
-## Key props
-
-- `variant`: `default` or `ghost`. `size`: `sm`, `md` (default), `lg`. `isDisabled`, `isIconOnly`.
-
-## Do / Don't
-
-- Do label the group with `aria-label` when there is no visible heading.
-- Don't use a toggle to trigger a mutation; use a button.
+**Don't** trigger a mutation with a toggle.

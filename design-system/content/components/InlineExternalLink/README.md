@@ -1,21 +1,9 @@
 # InlineExternalLink
 
-An external text link with the one shared style: dashed underline offset 2px and a small new-tab marker.
+An external text link with a dashed underline and a small new-tab marker.
 
-## When to use
+**Use for** links that leave the app, inside running text. Use `RouteLink` for in-app navigation.
 
-Use InlineExternalLink for links that leave the app, inside running text. Use `RouteLink` (through `RouteProvider`) for in-app navigation.
+**Props** `href`, optional `tooltip`; opens in a new tab with `rel="noopener noreferrer"` by default.
 
-## What the consumer provides
-
-`href` and the link text; optional `tooltip` (shown on hover/focus, e.g. the full URL).
-
-## Key props
-
-- `href` (required), `tooltip`, and any anchor attribute.
-- `target` defaults to `_blank` with `rel="noopener noreferrer"` and an accessible "(opens in a new tab)" suffix; any other target omits the marker.
-
-## Do / Don't
-
-- Do keep the link text descriptive; the arrow marker is decorative.
-- Don't restyle the underline or marker.
+**Don't** restyle the underline or marker.

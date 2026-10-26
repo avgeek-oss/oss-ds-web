@@ -1,21 +1,9 @@
 # Autocomplete
 
-A HeroUI searchable picker: a select-style trigger opening a popover with a `SearchField` pinned above the filtered `ListBox`.
+Searchable picker: a select-style trigger with a pinned `SearchField` above the filtered list.
 
-## When to use
+**Use for** one item from a long list, such as members. Use `Select` for short lists, `ComboBox` when the input is editable.
 
-- Choosing one item from a list too long to scan, such as members or time zones. Use `Select` for short lists, and `ComboBox` when the input itself should be editable.
+**Props** `selectedKey` / `onSelectionChange`, `variant` primary · secondary; parts `Autocomplete.Trigger`, `Popover`, `Filter`.
 
-## What the consumer provides
-
-- Compound parts: a `Label` and `Autocomplete.Trigger` (`Autocomplete.Value`, `Autocomplete.Indicator`). Then `Autocomplete.Popover` with `Autocomplete.Filter` (a `filter(text, search)` function) wrapping a `SearchField` (secondary, with `aria-label`) and a `ListBox`.
-- `selectedKey`/`defaultSelectedKey` and `onSelectionChange`.
-
-## Key props
-
-- `variant`: `primary` (default) or `secondary`. `isDisabled`, `isRequired`.
-
-## Do / Don't
-
-- Do use `variant="secondary"` for the nested `SearchField`. It stays opaque and fixed while results scroll beneath it.
-- Don't add your own popover radius or padding.
+**Don't** add your own popover radius or padding.

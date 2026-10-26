@@ -2,19 +2,8 @@
 
 A Filters button that opens a dialog for building field/operator/value conditions.
 
-## When to use
+**Use for** lists that need several structured conditions. `HistoryFilter` covers a single option.
 
-When a list needs several structured conditions; `HistoryFilter` covers a single option.
+**Provide** `fields`, controlled `value` and `onChange`, optional `getOptions(field, search)`, `renderOption`, `maxConditions` (8).
 
-## What the consumer provides
-
-`fields` (`field`, `label`, `operators` with `value`/`label`/`multiple`, optional `placeholder`, `pattern`, `maxLength`, `searchable`, `icon`), controlled `value` and `onChange`, optional stable `getOptions(field, search)` and `renderOption`, `maxConditions` (8). The preview opens the dialog through its own trigger.
-
-## Key behavior
-
-- Edits a draft until Apply; Cancel keeps committed conditions; duplicates are removed on Apply.
-- Multi-value operators use a picker when `getOptions` is supplied.
-
-## Do / Don't
-
-- The app defines operator meanings and implements search.
+**Don't** expect it to search; the app defines operator meanings and implements search.

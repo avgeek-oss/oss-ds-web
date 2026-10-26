@@ -1,20 +1,9 @@
 # IntegrationConnectionCard
 
-One provider connection: status, details, and connect, reauthorize and disconnect actions.
+One provider connection with its status, details and actions.
 
-## When to use
+**Use for** each third-party connection; a null `connection` renders the connect state.
 
-For each third-party provider connection; compose several cards for multiple installations.
+**Provide** `provider`, `connection`, `emptyDescription`, `disconnectDescription`, and awaited `onConnect`, `onReauthorize`, `onDisconnect`.
 
-## What the consumer provides
-
-`provider` (`name`, optional `icon`), nullable `connection` (`id`, `status`, `details`), `emptyDescription`, an accurate `disconnectDescription`, optional awaited `onConnect`, `onReauthorize`, `onDisconnect`, `children`.
-
-## Key behavior
-
-- A null connection renders the connect state.
-
-## Do / Don't
-
-- OAuth redirects and callback validation stay in the app.
-- Report action failures with one danger toast.
+**Don't** handle OAuth redirects in the card; the app owns them.

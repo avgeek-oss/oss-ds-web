@@ -2,21 +2,8 @@
 
 Pending invitations with copy-link, resend and revoke actions.
 
-## When to use
+**Use for** Team settings, beside `MembersTable`. Avatars look up Gravatar and fall back to initials.
 
-Beside `MembersTable` on Team settings.
+**Provide** `items`, `roles`, `formatDate`, and awaited `onCopyLink`, `onResend`, `onRevoke`. The app filters expired invitations.
 
-## What the consumer provides
-
-`items` (`id`, `email`, optional `name`, `role`, `expiresAt`, optional `status`), `roles`, `formatDate`, optional awaited `onCopyLink`, `onResend`, `onRevoke`, or custom `actions`. The app filters expired and revoked invitations.
-
-## Key behavior
-
-- Resend confirms the previous link will stop working; revoke confirms the invitation will no longer work.
-- Avatars use `UserAvatar` (Gravatar lookup by email; initials fallback).
-
-## Do / Don't
-
-- Await the real API call in each callback and update `items`/`value` only after it succeeds.
-- Report a failed mutation once, as a danger toast at bottom center; dialogs stay open with the draft retained.
-- Keep the standard headings, labels and confirmation copy.
+**Don't** update `items` before the API call succeeds.

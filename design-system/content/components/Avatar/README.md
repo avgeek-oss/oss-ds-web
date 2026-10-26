@@ -1,22 +1,9 @@
 # Avatar
 
-A HeroUI avatar showing an image with an initials fallback, in native sizes, colors and variants.
+Avatar showing an image with an initials fallback.
 
-## When to use
+**Use for** entities with a known image. Use `UserAvatar` for people identified by email.
 
-Use for entities with an image you already have, or a generic identity mark. Use `UserAvatar` for people identified by email; it derives initials and looks up Gravatar.
+**Props** `aria-label`, `size` sm · md · lg, `color`, `variant` default · soft; children `Avatar.Image`, `Avatar.Fallback`.
 
-## What the consumer provides
-
-`aria-label`, `Avatar.Image` (`src`, `alt`) and `Avatar.Fallback` (initials).
-
-## Key props
-
-- `size`: `sm` · `md` · `lg`
-- `color`: `default` · `accent` · `success` · `warning` · `danger`
-- `variant`: `default` · `soft`
-
-## Do / Don't
-
-- Do always provide a fallback.
-- Don't use color to encode status on avatars; use a Chip or StatusIndicator beside the name.
+**Don't** encode status in avatar color; use a Chip beside the name.

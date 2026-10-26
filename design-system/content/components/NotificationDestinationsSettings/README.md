@@ -1,22 +1,9 @@
 # NotificationDestinationsSettings
 
-Configures which event categories each outgoing notification destination receives.
+Chooses which event categories each outgoing destination receives.
 
-## When to use
+**Use for** Slack channels, email and webhooks. Incoming notifications use `NotificationMenu`.
 
-For outgoing destinations (Slack channels, email, webhooks). Incoming notifications use `NotificationMenu`.
+**Provide** `items`, `categories` (modes off · all · failures), awaited `onSubscriptionChange(item, category, mode)`, optional `onTest`, `onRemove`.
 
-## What the consumer provides
-
-`items` (`id`, `label`, optional `description`/`icon`, `subscriptions` keyed by category ID), `categories` (`id`, `label`, `modes` from `off` | `all` | `failures`), awaited `onSubscriptionChange(item, category, mode)`, optional `onTest`, `onRemove`, `actions`, `toolbar`, `isDisabled`.
-
-## Key behavior
-
-- Two-mode categories render checkboxes; failure-aware categories render All / Failures only, plus Clear when Off is allowed.
-
-## Do / Don't
-
-- Await the real API call in each callback and update `items`/`value` only after it succeeds.
-- Report a failed mutation once, as a danger toast at bottom center; dialogs stay open with the draft retained.
-- Keep the standard headings, labels and confirmation copy.
-- Categories describe the app's actual event types.
+**Don't** update `items` before the API call succeeds.

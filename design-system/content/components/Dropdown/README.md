@@ -1,20 +1,9 @@
 # Dropdown
 
-An action menu anchored to a trigger; the HeroUI Dropdown primitive.
+Action menu anchored to a trigger.
 
-## When to use
+**Use for** actions on an object, such as row actions. Use `Select` to choose a value, `Popover` for content.
 
-Use Dropdown for a set of actions on an object (row actions, page overflow). Use `Select` to choose a value and `Popover` for content.
+**Props** `Dropdown.Menu` (`aria-label`, `onAction`), `Dropdown.Item` (`id`, `isDisabled`, `variant="danger"`).
 
-## What the consumer provides
-
-The trigger label (or an icon with `aria-label`), the items, and `onAction(key)`.
-
-## Key props
-
-- Parts: `Dropdown`, `Dropdown.Trigger`, `Dropdown.Popover` (`placement`), `Dropdown.Menu` (`aria-label`, `onAction`, `selectionMode`), `Dropdown.Item` (`id`, `textValue`, `isDisabled`, `variant="danger"`).
-
-## Do / Don't
-
-- Do mark destructive items with `variant="danger"` and danger text, as the shared account menu does.
-- Don't put form fields in a menu.
+**Don't** put form fields in a menu.

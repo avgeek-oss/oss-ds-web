@@ -1,22 +1,9 @@
 # Select
 
-The HeroUI select with a `ListBox` popover, for picking one option from a known list.
+Pick one option from a known list, in a `ListBox` popover.
 
-## When to use
+**Use for** short or medium lists. Use `Autocomplete` to search, `ComboBox` to type, and `ChoiceField` for role pickers.
 
-- An ordinary choice from a short or medium list. Use `Autocomplete` (with `SearchField`) when people need to search, `ComboBox` when they may type, and `ChoiceField` for the standard labelled role or option picker.
+**Props** `selectedKey`/`defaultSelectedKey`, `onSelectionChange`; `variant` primary · secondary; `isDisabled`, `isRequired`, `isInvalid`, `fullWidth`.
 
-## What the consumer provides
-
-- Compound parts: a `Label`, `Select.Trigger` containing `Select.Value` and `Select.Indicator`, and `Select.Popover` containing a `ListBox` of `ListBox.Item` (`id`, `textValue`, `ListBox.ItemIndicator`).
-- `selectedKey`/`defaultSelectedKey` and `onSelectionChange`.
-
-## Key props
-
-- `variant`: `primary` (default) or `secondary`. `isDisabled`, `isRequired`, `isInvalid`, `fullWidth`.
-
-## Do / Don't
-
-- Do keep values and options at 14px on every breakpoint, as shipped.
-- Don't round the popover yourself. Its radius is the field radius plus the 8px inset.
-- Do truncate long labels and keep trailing metadata in a separate `shrink-0` slot clear of the tick.
+**Don't** round the popover yourself or resize options from 14px.

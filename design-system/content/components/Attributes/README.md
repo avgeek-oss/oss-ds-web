@@ -1,21 +1,9 @@
 # Attributes
 
-A label/value list for read-only details, as a titled list, a card or an embedded block.
+Label/value list for read-only details, as a list, card or embedded block.
 
-## When to use
+**Use for** noninteractive details such as identifiers and dates. Use `ExpandableAttributeList` when rows expand, `ResourceTable` for records with actions.
 
-Use for noninteractive attributes such as weights, identifiers and dates. Use `ExpandableAttributeList` when rows reveal details, and `ResourceTable` when records need column headers or row actions.
+**Props** `title`, `variant` list · card · embedded, `columns` 1 · 2 · 3; children `Attributes.Item` (`label`, value).
 
-## What the consumer provides
-
-`title` (required unless `variant="embedded"`), children of `Attributes.Item` (`label`, value as children, optional `icon`), optional `icon` and `columns`.
-
-## Key props
-
-- `variant`: `list` (default) · `card` · `embedded`
-- `columns`: `1` · `2` (default) · `3` (two columns below `lg`) — applies to the card layout.
-
-## Do / Don't
-
-- Do format values (dates, numbers) in the app before passing them.
-- Don't use it for editable fields; use the form patterns.
+**Don't** use it for editable fields.

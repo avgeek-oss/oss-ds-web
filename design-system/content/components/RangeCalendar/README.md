@@ -1,20 +1,9 @@
 # RangeCalendar
 
-The HeroUI inline calendar for selecting a start and end date. It also forms the body of the `DateRangePicker` popover.
+Inline calendar for picking a start and end date; also the body of `DateRangePicker`.
 
-## When to use
+**Use for** an always-visible interval picker. Use `Calendar` for one date.
 
-- An always-visible interval picker. Use `Calendar` for one date.
+**Props** `value`/`defaultValue` `{ start, end }`, `onChange`, `aria-label`; `isDisabled`, `isReadOnly`, `minValue`/`maxValue`; parts as in `Calendar`.
 
-## What the consumer provides
-
-- `value`/`defaultValue` `{ start, end }` (`CalendarDate`), `onChange` and an `aria-label`.
-- Compound parts as in `Calendar`: `RangeCalendar.Header`, `NavButton`, `Heading`, `Grid`, `GridHeader`/`HeaderCell` and `GridBody`/`Cell`. Optional `YearPickerTrigger` and `YearPickerGrid` parts, as used in `DateTimeRangePicker`.
-
-## Key props
-
-- `isDisabled`, `isReadOnly`, `minValue`/`maxValue`, `allowsNonContiguousRanges`.
-
-## Do / Don't
-
-- Do keep the native range fill and endpoint treatment.
+**Don't** restyle the native range fill and endpoints.

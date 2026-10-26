@@ -1,20 +1,9 @@
 # LoadingSkeleton
 
-A loading group with one accessible busy status; `SkeletonCard` placeholders inside it are decorative.
+A loading group with one accessible busy status around decorative `SkeletonCard` placeholders.
 
-## When to use
+**Use for** initial loading with visible placeholders. Use `QueryLoading` for an announcement only, `Spinner` for small regions.
 
-Use when initial loading needs visible placeholders. Use `QueryLoading` for an announcement without layout, and `Spinner` for small pending regions.
+**Provide** `SkeletonCard` children sized like the final layout; optional `aria-label` ("Loading data").
 
-## What the consumer provides
-
-Children (usually `SkeletonCard` elements sized like the eventual layout) and an optional `aria-label` (default "Loading data").
-
-## Key props
-
-- `SkeletonCard`: a Widget-shaped placeholder (`surface-secondary` fill, 5% foreground shimmer); size it with `className` or `style`.
-
-## Do / Don't
-
-- Do mirror the final page's card heights and arrangement.
-- Don't duplicate skeleton surfaces in apps; reuse these exports.
+**Don't** duplicate skeleton surfaces in apps.

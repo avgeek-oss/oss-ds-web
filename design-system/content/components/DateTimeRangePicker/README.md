@@ -1,22 +1,9 @@
 # DateTimeRangePicker
 
-The shared date-and-time interval picker: segmented start and end inputs and a range calendar popover with separate start and end time controls.
+Date-and-time interval picker with separate start and end time controls.
 
-## When to use
+**Use for** intervals with times, such as maintenance windows. Use `DateRangePicker` for date-only.
 
-- Any interval with times, such as maintenance windows or history filters. Use `DateRangePicker` for a date-only interval.
+**Props** controlled `value` / `onChange` (`CalendarDateTime`), `label`, `variant`, optional `hourCycle`, `granularity`, `locale`.
 
-## What the consumer provides
-
-- Controlled `value` `{ start, end }` as `CalendarDateTime`, and `onChange`.
-- A `label`, the surface `variant` (`primary` or `secondary`), and optional `minValue`/`maxValue`, `hourCycle`, `granularity` (`minute` default, or `second`), and `locale`.
-
-## Key props
-
-- All `DateRangePicker` props except `children`. `isDisabled`, `isReadOnly`, `isInvalid`.
-
-## Do / Don't
-
-- Do let `hourCycle`, `granularity` and `locale` change only the display; stored values are unchanged.
-- The segmented inputs stack at mobile widths.
-- Apps own the saved time zone, ambiguous daylight-saving resolution, UTC serialization, retention limits and persistence.
+**Don't** rely on it for time zones or UTC serialization; the app owns both.

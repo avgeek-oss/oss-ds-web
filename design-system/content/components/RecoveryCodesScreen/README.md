@@ -1,22 +1,9 @@
 # RecoveryCodesScreen
 
-Shows newly generated one-use recovery codes with copy, download and continue actions.
+Shows newly generated one-use recovery codes with copy, download and continue.
 
-The preview's brand mark is a stand-in: a 32px `accent` tile with an 8px radius beside the name "Avgeek". Apps pass their own `BrandLockup`.
+**Use for** the moment codes are generated during sign-in or setup. Use `RecoveryCodes` inside settings modals.
 
-## When to use
+**Provide** `brand`, new `codes`, `onContinue`, optional download filename. Preview mark is a stand-in.
 
-Immediately after codes are generated during sign-in or setup. Use `RecoveryCodes` inside settings modals instead.
-
-## What the consumer provides
-
-`brand`, the new `codes`, an `onContinue` action and an optional download filename. The app generates the codes.
-
-## Key behavior
-
-- Copy codes blocks repeat presses during a clipboard write and reports one toast per write.
-
-## Do / Don't
-
-- Never reconstruct old codes from stored hashes; show codes only when newly generated.
-- Keep the title **Save your recovery codes** and its description.
+**Don't** reconstruct old codes; show codes only when newly generated.

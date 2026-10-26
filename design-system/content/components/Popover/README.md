@@ -1,20 +1,9 @@
 # Popover
 
-A small non-modal surface anchored to a trigger for contextual content; the HeroUI Popover primitive.
+A small non-modal surface anchored to a trigger.
 
-## When to use
+**Use for** contextual detail. Use `Tooltip` for a one-line label, `Dropdown` for actions, `Modal` for forms.
 
-Use Popover for contextual detail (release notes, a short explanation). Use `Tooltip` for a one-line label, `Dropdown` for action menus, and `Modal` for forms.
+**Props** `Popover.Trigger`, `Popover.Content` (`placement`), `Popover.Arrow`, `Popover.Dialog`, `Popover.Heading`.
 
-## What the consumer provides
-
-A trigger and the dialog content; open state is native unless controlled.
-
-## Key props
-
-- Parts: `Popover`, `Popover.Trigger`, `Popover.Content` (`placement`), `Popover.Arrow`, `Popover.Dialog`, `Popover.Heading`.
-
-## Do / Don't
-
-- Do keep content short and dismissible.
-- Don't put a primary workflow in a popover.
+**Don't** put a primary workflow in a popover.

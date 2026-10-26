@@ -1,21 +1,9 @@
 # Textarea
 
-The HeroUI multi-line text field (HeroUI `TextArea`, exported as `Textarea`).
+Multi-line text field.
 
-## When to use
+**Use for** descriptions and notes. Use `Input` for a single line.
 
-- Descriptions, notes and other multi-line free text. Use `Input` for a single line.
+**Props** native textarea attributes and an accessible name; `variant` primary · secondary; `fullWidth`; `aria-invalid`.
 
-## What the consumer provides
-
-- Native textarea attributes (`rows`, `value`/`defaultValue`, `onChange`, `placeholder`, `disabled`) and an accessible name.
-- Mark invalid fields with `aria-invalid`.
-
-## Key props
-
-- `variant`: `primary` (default) or `secondary`. `fullWidth`.
-
-## Do / Don't
-
-- Do use the `secondary` surface inside widgets, modals and drawers.
-- Don't show a submission failure under the field. Failures are reported in one toast.
+**Don't** show submission failures under the field; use one toast.

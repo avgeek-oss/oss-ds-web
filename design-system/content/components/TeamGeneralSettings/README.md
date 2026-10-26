@@ -1,22 +1,9 @@
 # TeamGeneralSettings
 
-The Team details widget: team name, optionally with a description.
+The Team details widget: team name, optionally a description.
 
-## When to use
+**Use for** Team settings → General. Set `mode="details"` only when the server supports a description.
 
-On Team settings → General.
+**Provide** `value`, awaited `onSave`; optional `mode`, `maxLength` (120), `maxDescriptionLength` (500).
 
-## What the consumer provides
-
-Default mode: `value` (name) and awaited `onSave(name)`. `mode="details"`: `value` `{ name, description }`, awaited `onSave(values)`, optional `maxDescriptionLength` (500). Optional `maxLength` (120).
-
-## Key behavior
-
-- Set `mode="details"` only when the server supports a description.
-
-## Do / Don't
-
-- Await the real API call in each callback and update `items`/`value` only after it succeeds.
-- Report a failed mutation once, as a danger toast at bottom center; dialogs stay open with the draft retained.
-- Keep the standard headings, labels and confirmation copy.
-- Don't show unsupported fields.
+**Don't** show unsupported fields or change the standard copy.

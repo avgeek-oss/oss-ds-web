@@ -1,20 +1,9 @@
 # BackendUnavailable
 
-A full-viewport outage screen with an accent spinner and "<app> is temporarily unavailable. Reconnecting automatically…".
+Full-viewport outage screen that reconnects automatically.
 
-## When to use
+**Use for** when the backend can't serve the session or app data, with `useBackendReconnect`. Use `ErrorPage status="unavailable"` for a route-level outage.
 
-Use when the backend cannot serve the initial session or app data, with `useBackendReconnect` probing for recovery. Use `ErrorPage status="unavailable"` for a route-level outage the user retries.
+**Provide** `appName`.
 
-## What the consumer provides
-
-`appName`, plus section props.
-
-## Key props
-
-- `useBackendReconnect(probe)` retries read-only probes; resolving `true` ends the loop.
-
-## Do / Don't
-
-- Do keep known sessions and loaded content during background failures.
-- Don't redirect to sign-in because the backend is unreachable.
+**Don't** redirect to sign-in because the backend is unreachable.

@@ -1,20 +1,9 @@
 # SidebarAccountMenu
 
-The identity button at the foot of the sidebar that opens the account menu: identity header, then labelled Account, product and Session sections.
+The sidebar's identity button, opening the account menu.
 
-## When to use
+**Use for** `ApplicationSidebar`'s `footerContent`. Don't add another account menu to the header.
 
-Use it as `ApplicationSidebar`'s `footerContent`. Keep account destinations here and in Account settings; don't add another account menu to the header.
+**Provide** `name`, `email`, `teamName`, optional `avatarUrl` (else Gravatar), `groups`, `onAction(id)`.
 
-## What the consumer provides
-
-`name`, `email`, `teamName`, optional `avatarUrl`, `groups` (`{ id, label, items: [{ id, label, icon, destructive? }] }`) and `onAction(id)`. Without `avatarUrl` the avatar looks up Gravatar and falls back to initials.
-
-## Key props
-
-`name`, `email`, `teamName`, `avatarUrl`, `groups`, `onAction`.
-
-## Do / Don't
-
-- Do mark Sign out as `destructive` and put it in its own Session group.
-- Don't add padding to the sections; dividers span the full popover width by design.
+**Don't** pad the sections; put a `destructive` Sign out in its own Session group.
