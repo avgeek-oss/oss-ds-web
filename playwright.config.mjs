@@ -1,14 +1,25 @@
 import { defineConfig } from "@playwright/test";
 
+// Reduced motion changes only navigation and feedback transitions. The dark
+// theme changes colours, so dark projects run only the specs that read
+// computed colours or the theme wiring: feedback (chip tone colours),
+// navigation (breadcrumb emphasis colours) and storybook (the docs theme
+// global). Every other spec checks behaviour that no theme token affects.
+const reducedMotionSpecs = /(?:navigation|feedback)\.spec\.mjs/;
+const darkThemeSpecs = /(?:navigation|feedback|storybook)\.spec\.mjs/;
 const projects = [];
 for (const width of [390, 1280]) {
   for (const theme of ["light", "dark"]) {
     for (const reducedMotion of ["no-preference", "reduce"]) {
+      const testMatch =
+        reducedMotion === "reduce"
+          ? reducedMotionSpecs
+          : theme === "dark"
+            ? darkThemeSpecs
+            : undefined;
       projects.push({
         name: `${width}-${theme}-${reducedMotion}`,
-        ...(reducedMotion === "reduce"
-          ? { testMatch: /(?:navigation|feedback)\.spec\.mjs/ }
-          : {}),
+        ...(testMatch ? { testMatch } : {}),
         use: {
           viewport: { width, height: 900 },
           hasTouch: width === 390,
