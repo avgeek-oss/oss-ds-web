@@ -125,24 +125,16 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:stories
   browser:
-    # TEMPORARY measurement matrix: full suite at 1, 2 and 4 workers, three
-    # samples each for 2 and 4. Replaced by the chosen shard layout before
-    # this pull request is ready.
-    name: browser tests w${{ matrix.workers }} run ${{ matrix.sample }}
+    # Four shards at two workers each (playwright.config.mjs) keep every
+    # shard near three minutes; Playwright splits shards by test count.
+    name: browser tests ${{ matrix.shard }}/4
     needs: build
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { workers: 1, sample: 1 }
-          - { workers: 2, sample: 1 }
-          - { workers: 2, sample: 2 }
-          - { workers: 2, sample: 3 }
-          - { workers: 4, sample: 1 }
-          - { workers: 4, sample: 2 }
-          - { workers: 4, sample: 3 }
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -177,15 +169,15 @@ jobs:
         with:
           name: browser-fixtures
           path: .
-      - run: pnpm test:browser --workers=${{ matrix.workers }}
+      - run: pnpm test:browser --shard=${{ matrix.shard }}/4
         env:
           # One report per shard; the verify job gathers them into
           # artifacts/browser/ for the main artifact.
-          PLAYWRIGHT_JSON_OUTPUT_FILE: artifacts/browser/report-w${{ matrix.workers }}-${{ matrix.sample }}.json
+          PLAYWRIGHT_JSON_OUTPUT_FILE: artifacts/browser/report-${{ matrix.shard }}.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: github.ref == 'refs/heads/main'
         with:
-          name: browser-report-w${{ matrix.workers }}-${{ matrix.sample }}
+          name: browser-report-${{ matrix.shard }}
           if-no-files-found: error
           retention-days: 1
           path: artifacts/browser/
