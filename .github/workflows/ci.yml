@@ -1,4 +1,4 @@
-name: Validate and publish
+name: CI
 on:
   push:
     branches: [main]
@@ -14,15 +14,14 @@ concurrency:
   # running check. Every other run is grouped by commit, so main pushes and
   # tags are never cancelled or replaced while pending; the release checks
   # need a result for each exact commit.
-  group: package-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   # The jobs up to the aggregate verify job run every part of `pnpm verify`
   # (package.json) in parallel. Keep the two in step when a part changes.
   # A release tag points at a commit that main already verified; the
   # publish job reuses that run's artifact instead of verifying again.
-  static:
-    name: static checks
+  checks:
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
     steps:
@@ -41,7 +40,6 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
   build:
-    name: build and Storybook export
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
     steps:
@@ -67,7 +65,6 @@ jobs:
             dist/
             storybook-static/
   package:
-    name: packed consumer
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
     steps:
@@ -90,7 +87,6 @@ jobs:
           retention-days: 1
           path: artifacts/
   stories:
-    name: story tests
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
     # Playwright's image carries Chromium and its system libraries, so no
@@ -145,7 +141,7 @@ jobs:
   browser:
     # Four shards at two workers each (playwright.config.mjs) keep every
     # shard near three minutes; Playwright splits shards by test count.
-    name: browser tests ${{ matrix.shard }}/4
+    name: browser (${{ matrix.shard }}/4)
     needs: build
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
@@ -223,7 +219,7 @@ jobs:
     # every part above passed. always() makes a failed, cancelled or
     # skipped part fail this check instead of skipping it, because a
     # skipped required check counts as passing.
-    needs: [static, build, package, stories, browser]
+    needs: [checks, build, package, stories, browser]
     if: always() && github.ref_type != 'tag'
     runs-on: ubuntu-latest
     steps:
@@ -294,7 +290,7 @@ jobs:
           run=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=push&status=success&per_page=5" \
             --jq '[.workflow_runs[] | select(.head_branch == "main")] | sort_by(.created_at) | last | .id // empty')
           if [ -z "$run" ]; then
-            echo "::error::No successful 'Validate and publish' push run exists on main for $GITHUB_SHA. Merge the commit, let main verify it, then release it."
+            echo "::error::No successful CI push run exists on main for $GITHUB_SHA. Merge the commit, let main verify it, then release it."
             exit 1
           fi
           echo "Using the artifact of run $run for $GITHUB_SHA."
