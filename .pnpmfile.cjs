@@ -16,7 +16,9 @@ function needsTypeScriptApi(name) {
 }
 
 function readPackage(pkg) {
-  if (needsTypeScriptApi(pkg.name) && pkg.peerDependencies?.typescript) {
+  // pnpm dlx's temporary project has no name.
+  const name = pkg.name ?? "";
+  if (needsTypeScriptApi(name) && pkg.peerDependencies?.typescript) {
     delete pkg.peerDependencies.typescript;
     if (pkg.peerDependenciesMeta) delete pkg.peerDependenciesMeta.typescript;
     pkg.dependencies = { ...pkg.dependencies, typescript: TYPESCRIPT_6 };
