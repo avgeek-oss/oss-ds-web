@@ -68,6 +68,6 @@ Pull requests and pushes to `main` run every part of `pnpm verify` in parallel j
 
 The publish job uses npm trusted publishing with GitHub Actions OIDC. Configure `avgeek-oss/oss-design-system` and workflow `ci.yml` in the package's npm trusted-publisher settings. The job has `id-token: write`; no publishing token is stored in GitHub secrets.
 
-CI downloads the verified tarball, checks its SHA-512 integrity, and publishes those exact bytes without running package lifecycle scripts. A fresh registry download must match that integrity and pass the isolated Vite and Next.js consumer builds. A retry accepts an existing version only if its integrity matches the verified candidate; changed contents require a new version.
+CI downloads the verified tarball, checks its SHA-512 integrity, and publishes those exact bytes without running package lifecycle scripts. A fresh registry download must match that integrity byte for byte, and the registry must declare the same integrity; the isolated Vite and Next.js consumer builds already ran on those bytes in the verify run. A retry accepts an existing version only if its integrity matches the verified candidate; changed contents require a new version.
 
 For the initial npm migration, a maintainer publishes the already verified release artifact interactively to create the package, then configures its trusted publisher. Existing GitHub Packages releases remain available for old lockfiles. Public npm installations need no registry credentials or `packages: read` permission.
