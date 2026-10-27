@@ -107,7 +107,18 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: .nvmrc
-          cache: pnpm
+      # Inside the container pnpm keeps its store under /github/home, not
+      # the runner's home, so setup-node's pnpm cache (shared with the runner
+      # jobs under one key) never restored here. Cache the store at the path
+      # pnpm reports in this container, under a key of its own.
+      - name: Locate the pnpm store
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-container-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-container-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
       - name: Check the image matches the locked Playwright
         # The image ships the browsers for one Playwright version. A lockfile
@@ -156,7 +167,18 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: .nvmrc
-          cache: pnpm
+      # Inside the container pnpm keeps its store under /github/home, not
+      # the runner's home, so setup-node's pnpm cache (shared with the runner
+      # jobs under one key) never restored here. Cache the store at the path
+      # pnpm reports in this container, under a key of its own.
+      - name: Locate the pnpm store
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-container-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-container-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
       - name: Check the image matches the locked Playwright
         # The image ships the browsers for one Playwright version. A lockfile
