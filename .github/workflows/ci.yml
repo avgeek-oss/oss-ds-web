@@ -10,11 +10,68 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: package-${{ github.ref }}
-  cancel-in-progress: false
+  # Pull request runs are grouped by branch so a newer push supersedes the
+  # running check. Every other run is grouped by commit, so main pushes and
+  # tags are never cancelled or replaced while pending; the release checks
+  # need a result for each exact commit.
+  group: package-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   verify:
+    # A release tag points at a commit that main already verified; the
+    # publish job reuses that run's artifact instead of verifying again.
+    if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Resolve the Playwright version
+        id: playwright
+        run: |
+          version=$(grep -oE '@playwright/test@[0-9]+\.[0-9]+\.[0-9]+' pnpm-lock.yaml | head -1 | sed 's/.*@//')
+          if [ -z "$version" ]; then
+            echo "::error::Could not read the @playwright/test version from pnpm-lock.yaml."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm verify
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        # Only a release needs the export and the candidate, and it reads
+        # them from the main run of the tagged commit.
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: storybook-and-package
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            storybook-static/
+            artifacts/
+  publish:
+    if: always() && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -24,49 +81,28 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: .nvmrc
-          cache: pnpm
+          registry-url: https://registry.npmjs.org
+          scope: "@avgeek-oss"
       - name: Validate release tag and main ancestry
-        if: startsWith(github.ref, 'refs/tags/')
         run: |
           node scripts/check-release.mjs
           git merge-base --is-ancestor HEAD origin/main
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm verify
-      - name: Check npm tarball publication without uploading
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: npm publish ./artifacts/avgeek-oss-design-system-*.tgz --dry-run --ignore-scripts --registry=https://registry.npmjs.org
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: storybook-and-package
-          if-no-files-found: error
-          path: |
-            storybook-static/
-            artifacts/
-  publish:
-    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-    needs: verify
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
-        with:
-          node-version-file: .nvmrc
-          registry-url: https://registry.npmjs.org
-          scope: "@avgeek-oss"
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: storybook-and-package
-          path: .
+      - name: Download the artifact of the verified main run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=push&status=success&per_page=5" \
+            --jq '[.workflow_runs[] | select(.head_branch == "main")] | sort_by(.created_at) | last | .id // empty')
+          if [ -z "$run" ]; then
+            echo "::error::No successful 'Validate and publish' push run exists on main for $GITHUB_SHA. Merge the commit, let main verify it, then release it."
+            exit 1
+          fi
+          echo "Using the artifact of run $run for $GITHUB_SHA."
+          gh run download "$run" --name storybook-and-package --dir .
       - name: Check verified package integrity
         run: node scripts/check-release.mjs --candidate
+      - name: Check npm tarball publication without uploading
+        run: npm publish ./artifacts/avgeek-oss-design-system-*.tgz --dry-run --ignore-scripts --registry=https://registry.npmjs.org
       - name: Publish verified tarball
         run: node scripts/publish-package.mjs
       - name: Verify registry package and fresh consumers
