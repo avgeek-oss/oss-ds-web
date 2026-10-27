@@ -317,8 +317,8 @@ jobs:
           gh run download "$run" --name storybook-and-package --dir .
       - name: Check verified package integrity
         run: node scripts/check-release.mjs --candidate
-      - name: Check npm tarball publication without uploading
-        run: npm publish ./artifacts/avgeek-oss-design-system-*.tgz --dry-run --ignore-scripts --registry=https://registry.npmjs.org
+      # npm's dry run rejects an already-published version. The publisher
+      # accepts retries only when registry integrity matches the candidate.
       - name: Publish verified tarball
         run: node scripts/publish-package.mjs
       - name: Verify the registry serves the verified bytes
