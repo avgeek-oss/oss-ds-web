@@ -51,6 +51,13 @@ export default defineConfig({
   ],
   use: {
     browserName: "chromium",
+    // The full Chromium build in new headless mode. The default headless
+    // shell sometimes never hands Playwright the background tab that a
+    // Ctrl+click opens, although the tab's request is served: 16 of 120
+    // local repeats of the sidebar Ctrl+click failed on the shell and 0 of
+    // 120 on this channel, and the shell failure recurs in CI at 2 and 4
+    // workers (navigation.spec.mjs:37 and :127).
+    channel: "chromium",
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
   },

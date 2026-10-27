@@ -181,6 +181,59 @@ jobs:
           if-no-files-found: error
           retention-days: 1
           path: artifacts/browser/
+  browser-measure:
+    # TEMPORARY trial: full-suite samples on the new-headless channel at two
+    # and four workers. Not part of verify; this branch is not merged.
+    name: TEMPORARY browser tests w${{ matrix.workers }} run ${{ matrix.sample }}
+    needs: build
+    if: github.ref_type != 'tag'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workers: [2, 4]
+        sample: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Resolve the Playwright version
+        id: playwright
+        run: |
+          version=$(grep -oE '@playwright/test@[0-9]+\.[0-9]+\.[0-9]+' pnpm-lock.yaml | head -1 | sed 's/.*@//')
+          if [ -z "$version" ]; then
+            echo "::error::Could not read the @playwright/test version from pnpm-lock.yaml."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+      - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: browser-fixtures
+          path: .
+      - run: pnpm test:browser --workers=${{ matrix.workers }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with:
+          name: trial-w${{ matrix.workers }}-${{ matrix.sample }}
+          retention-days: 3
+          path: artifacts/browser/
   verify:
     # The ruleset on main requires a check named verify, and the Cut
     # release gate requires this run to succeed. This job passes only when
