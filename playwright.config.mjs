@@ -7,6 +7,14 @@ import { defineConfig } from "@playwright/test";
 // global). Every other spec checks behaviour that no theme token affects.
 const reducedMotionSpecs = /(?:navigation|feedback)\.spec\.mjs/;
 const darkThemeSpecs = /(?:navigation|feedback|storybook)\.spec\.mjs/;
+// Tests tagged @new-tab open a tab with a Ctrl+click on wide screens. The
+// default headless shell sometimes never hands Playwright that tab although
+// its request is served, so on 1280 those tests run in their own projects on
+// the full Chromium build in new headless mode (channel "chromium"), and the
+// shell projects skip them. Everything else stays on the shell, where the
+// clipboard and Back navigation specs behave as in the shipped apps; at 390
+// the tests use touch and open no tab, so they stay on the shell.
+const newTabTests = /@new-tab/;
 const projects = [];
 for (const width of [390, 1280]) {
   for (const theme of ["light", "dark"]) {
@@ -17,16 +25,25 @@ for (const width of [390, 1280]) {
           : theme === "dark"
             ? darkThemeSpecs
             : undefined;
+      const use = {
+        viewport: { width, height: 900 },
+        hasTouch: width === 390,
+        colorScheme: theme,
+        reducedMotion,
+      };
       projects.push({
         name: `${width}-${theme}-${reducedMotion}`,
         ...(testMatch ? { testMatch } : {}),
-        use: {
-          viewport: { width, height: 900 },
-          hasTouch: width === 390,
-          colorScheme: theme,
-          reducedMotion,
-        },
+        ...(width === 1280 ? { grepInvert: newTabTests } : {}),
+        use,
       });
+      if (width === 1280)
+        projects.push({
+          name: `${width}-${theme}-${reducedMotion}-chromium`,
+          ...(testMatch ? { testMatch } : {}),
+          grep: newTabTests,
+          use: { ...use, channel: "chromium" },
+        });
     }
   }
 }

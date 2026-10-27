@@ -5,7 +5,7 @@ async function press(control, touch) {
   if (touch) await control.tap();
   else await control.click();
 }
-test("sidebar links preserve navigation, active sections and mobile dismissal", async ({
+test("sidebar links preserve navigation, active sections and mobile dismissal @new-tab", async ({
   page,
   context,
   fixtureUrl,
@@ -104,7 +104,7 @@ test("sidebar links preserve navigation, active sections and mobile dismissal", 
       .getByRole("link", { name: "Account settings", exact: true }),
   ).not.toHaveAttribute("aria-current", "page");
 });
-test("notification activation waits, retries and preserves native modified clicks", async ({
+test("notification activation waits, retries and preserves native modified clicks @new-tab", async ({
   page,
   context,
   fixtureUrl,
