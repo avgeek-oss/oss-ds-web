@@ -171,7 +171,7 @@ function renderBlock(block: Block): ReactNode {
     case "table":
       return (
         <div className="overflow-x-auto rounded-xl border border-separator">
-          <table className="w-full border-collapse text-start text-xs">
+          <table className="w-full border-collapse text-start text-sm leading-6">
             <thead className="bg-surface-secondary">
               <tr>
                 {block.header.map((cell, index) => (

@@ -351,7 +351,7 @@ function Transcript({
           aria-label="Conversation"
           aria-live="polite"
           aria-busy={status === "streaming"}
-          className="grid gap-4 px-4 py-5"
+          className="grid gap-5 px-4 py-5"
         >
           {items.map((item) => {
             if (item.type === "user_text")
@@ -394,7 +394,7 @@ function Transcript({
             );
           })}
           {working || status === "running_client_tools" ? (
-            <li className="grid gap-1.5 text-sm text-muted">
+            <li className="grid gap-1.5 text-sm leading-6 text-muted">
               {toolRunning && status === "streaming" ? null : (
                 <span role="status" className="inline-flex items-center gap-2">
                   <Spinner size="sm" color="current" aria-hidden="true" />
@@ -404,7 +404,7 @@ function Transcript({
                 </span>
               )}
               {thinking ? (
-                <span className="line-clamp-3 ps-6 text-xs">{thinking}</span>
+                <span className="line-clamp-3 ps-6">{thinking}</span>
               ) : null}
             </li>
           ) : null}
@@ -498,19 +498,21 @@ function ToolActivity({
         size="sm"
         color="current"
         aria-hidden="true"
-        className="size-3.5"
+        className="size-4"
       />
     ) : item.status === "succeeded" ? (
-      icon(CheckmarkCircle02Icon, "size-3.5 text-success")
+      icon(CheckmarkCircle02Icon, "size-4 text-success")
     ) : item.status === "declined" ? (
-      icon(CancelCircleIcon, "size-3.5")
+      icon(CancelCircleIcon, "size-4")
     ) : (
-      icon(Alert02Icon, "size-3.5 text-danger")
+      icon(Alert02Icon, "size-4 text-danger")
     );
+  // Same size and line height as paragraphs, so a tool line reads as part
+  // of the conversation rather than as a caption.
   return (
-    <div className="grid min-w-0 gap-0.5 text-xs text-muted">
-      <span className="flex min-w-0 flex-wrap items-center gap-x-1.5">
-        <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
+    <div className="grid min-w-0 gap-1 py-1 text-sm leading-6 text-muted">
+      <span className="flex min-w-0 flex-wrap items-center gap-x-2">
+        <span className="inline-flex size-4 shrink-0 items-center justify-center">
           {statusIcon}
         </span>
         <span className="font-medium text-foreground">
@@ -528,7 +530,7 @@ function ToolActivity({
         </span>
       </span>
       {item.summary && item.status !== "succeeded" ? (
-        <span className="line-clamp-2 break-words ps-5">{item.summary}</span>
+        <span className="line-clamp-2 break-words ps-6">{item.summary}</span>
       ) : null}
     </div>
   );
@@ -556,14 +558,14 @@ function ConfirmationCard({
         <span className="mt-0.5 text-warning">{icon(Alert02Icon)}</span>
         <div className="grid min-w-0 gap-0.5">
           <p className="text-sm font-medium">{presentation.label}</p>
-          <p className="text-xs text-muted">
+          <p className="text-sm leading-6 text-muted">
             {presentation.detail ??
               "This changes your data. The assistant waits for your decision."}
           </p>
         </div>
       </div>
       {fields.length ? (
-        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 rounded-xl bg-surface-secondary px-3 py-2 text-xs">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 rounded-xl bg-surface-secondary px-3 py-2 text-sm">
           {fields.map(([key, value]) => (
             <div key={key} className="contents">
               <dt className="text-muted">{key}</dt>
@@ -582,7 +584,7 @@ function ConfirmationCard({
           </Button>
         </div>
       ) : (
-        <p role="status" className="text-end text-xs text-muted">
+        <p role="status" className="text-end text-sm text-muted">
           {decision ? "Approved" : "Declined"}
         </p>
       )}
