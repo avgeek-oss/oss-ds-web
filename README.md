@@ -64,7 +64,7 @@ Release notes are in [CHANGELOG.md](CHANGELOG.md). Source and third-party attrib
 
 ## Publishing
 
-Pull requests and pushes to `main` run every part of `pnpm verify` in parallel jobs, reported together as the `verify` check. Stable version tags (`v1.2.18`, for example) publish publicly to npmjs.org from the artifact that the `main` run of the tagged commit verified, after checking its integrity, instead of running the checks again. The tag must match `package.json` and point to a commit on `main`. Update the version and changelog through the normal review process, then tag the intended commit and push the tag to release it.
+Pull requests and pushes to `main` run every part of `pnpm verify` in parallel jobs, reported together as the `verify` check. Stable version tags (`v1.2.18`, for example) publish publicly to npmjs.org from the artifact that the `main` run of the tagged commit verified, after checking its integrity, instead of running the checks again. The tag must match `package.json` and point to a commit on `main`. Update the version and add its `## X.Y.Z (YYYY-MM-DD)` section to the changelog through the normal review process, then tag the intended commit and push the tag to release it.
 
 The publish job uses npm trusted publishing with GitHub Actions OIDC. Configure `avgeek-oss/oss-ds-web` and workflow `ci.yml` in the package's npm trusted-publisher settings. The job has `id-token: write`; no publishing token is stored in GitHub secrets.
 

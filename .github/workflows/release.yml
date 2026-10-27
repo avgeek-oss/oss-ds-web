@@ -71,8 +71,8 @@ jobs:
       - name: Check the changelog has an entry
         run: |
           escaped=$(printf '%s' "$VERSION" | sed 's/[.]/\\./g')
-          if ! grep -Eq "^## ${escaped}( |$)" CHANGELOG.md; then
-            echo "::error::CHANGELOG.md has no '## ${VERSION}' section. Add and date it before releasing."
+          if ! grep -Eq "^## ${escaped} \([0-9]{4}-[0-9]{2}-[0-9]{2}\)$" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## ${VERSION} (YYYY-MM-DD)' section. Add and date it before releasing."
             exit 1
           fi
       - name: Check the tag and version are new
