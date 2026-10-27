@@ -1,6 +1,6 @@
 # SettingsPageTitle
 
-The standard title and 24px icon for a common settings page.
+The standard title and 19px icon for a common settings page, matching secondary sidebar entity headings.
 
 **Use for** `titleContent` on Account and Team settings pages.
 

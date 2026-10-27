@@ -1,0 +1,142 @@
+@layer components {
+  .sidebar-body {
+    --sidebar-item-text-inset: 8px;
+    gap: 14px;
+    padding: 18px 12px 16px;
+  }
+
+  .sidebar-entity-header {
+    /* Match the space below the 20px text line centered in a navigation row. */
+    padding-bottom: var(--sidebar-item-text-inset);
+  }
+
+  .sidebar-section {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .sidebar-section-heading {
+    padding: 0 8px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+  }
+
+  .sidebar-items {
+    display: grid;
+    gap: 0;
+  }
+
+  .sidebar-item {
+    --sidebar-control-size: 36px;
+    min-height: var(--sidebar-control-size);
+    gap: 12px;
+    padding: 6px 8px;
+  }
+
+  .sidebar-item-icon,
+  .sidebar-heading-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+
+    :is(svg, img) {
+      width: var(--sidebar-icon-size, 17px);
+      height: var(--sidebar-icon-size, 17px);
+      flex-shrink: 0;
+    }
+  }
+
+  .sidebar-heading-icon {
+    --sidebar-icon-size: 19px;
+  }
+
+  .sidebar-item-icon {
+    color: var(--muted);
+  }
+
+  .sidebar-item[aria-current="page"] .sidebar-item-icon {
+    color: inherit;
+  }
+
+  .sidebar-navigation-toggle {
+    --sidebar-control-size: 40px;
+    width: var(--sidebar-control-size);
+    height: var(--sidebar-control-size);
+    min-width: var(--sidebar-control-size);
+    min-height: var(--sidebar-control-size);
+    padding: 0;
+    border-radius: var(--radius-3xl);
+    background: transparent;
+    color: var(--foreground);
+
+    svg {
+      width: 17px;
+      height: 17px;
+      margin: 0;
+    }
+
+    @media (hover: hover) {
+      &:hover,
+      &[data-hovered="true"] {
+        background: var(--default);
+      }
+    }
+  }
+
+  .sidebar-navigation-toggle[data-hover-suppressed="true"],
+  .drawer__backdrop[data-exiting="true"]
+    #application-navigation
+    .sidebar-navigation-toggle {
+    background: transparent;
+    transition-property: transform, box-shadow;
+  }
+
+  .navigation-toggle.sidebar-navigation-toggle {
+    margin-inline-start: calc(8px + (17px - var(--sidebar-control-size)) / 2);
+  }
+
+  .sidebar-navigation-close {
+    top: calc((4rem - var(--sidebar-control-size)) / 2);
+  }
+
+  .sidebar-mobile-body {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  @media (pointer: coarse) {
+    .sidebar-body {
+      --sidebar-item-text-inset: 12px;
+    }
+
+    .sidebar-item {
+      --sidebar-control-size: 44px;
+    }
+
+    .sidebar-navigation-toggle::before {
+      position: absolute;
+      inset: calc((var(--sidebar-control-size) - 44px) / 2);
+      content: "";
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .sidebar-navigation-toggle {
+      --sidebar-control-size: 36px;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .sidebar-body:has([data-secondary-header]) {
+      /* The 32px header centers a 28px text line, supplying the remaining 2px. */
+      padding-top: 16px;
+    }
+
+    .sidebar-entity-header {
+      /* Keep the 32px heading row and account for its existing 2px text inset. */
+      min-height: calc(32px + var(--sidebar-item-text-inset) - 2px);
+      padding-bottom: calc(var(--sidebar-item-text-inset) - 2px);
+    }
+  }
+}

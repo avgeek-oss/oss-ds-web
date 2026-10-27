@@ -15,6 +15,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { menuItemVariants } from "@heroui/styles";
 import { Button as AriaButton } from "react-aria-components";
 import { useRoutePathname } from "../hooks/route-context.js";
+import { useNavigationToggleHover } from "../hooks/use-navigation-toggle-hover.js";
 import { Button } from "../buttons/button.js";
 import { AlertDialog } from "../overlays/alert-dialog.js";
 import { Toast } from "../overlays/toast.js";
@@ -79,7 +80,7 @@ function Content({
   return (
     <div
       className={cn(
-        "mx-auto min-h-full w-full min-w-0 px-4 pt-0 pb-20",
+        "mx-auto min-h-full w-full min-w-0 px-4 pt-0 pb-4",
         widths[variant ?? contentWidth],
         className,
       )}
@@ -172,6 +173,7 @@ export function ApplicationNavbar({
   sidebarOpen?: boolean;
   showThemeSwitcher?: boolean;
 }) {
+  const toggleHover = useNavigationToggleHover();
   const { breadcrumbItems } = useAppShellHeaderState();
   const homeItem: ShellLinkConfig = {
     id: "home",
@@ -179,23 +181,23 @@ export function ApplicationNavbar({
     href: config.homeHref,
     label: config.brand.title,
   };
-
   return (
     <header className="sticky top-[var(--app-shell-top-offset,0px)] z-30 flex min-h-16 items-center justify-between gap-5 border-b border-separator bg-background/90 pl-3 pr-4 backdrop-blur">
       <div className="flex min-w-0 items-center gap-2">
         {hasSidebar ? (
           <Button
+            {...toggleHover}
             aria-label="Toggle navigation"
             aria-expanded={sidebarOpen}
             aria-controls={sidebarOpen ? "application-navigation" : undefined}
-            className="navigation-toggle size-11 min-h-11 min-w-11 shrink-0"
+            className="navigation-toggle sidebar-navigation-toggle shrink-0"
             isIconOnly
             onPress={onSidebarToggle}
             variant="ghost"
           >
             <HugeiconsIcon
               aria-hidden="true"
-              className="size-5"
+              className="m-0 size-[17px]"
               icon={PanelLeftIcon}
             />
           </Button>
@@ -258,6 +260,30 @@ export function ApplicationSidebar({ config }: { config: SidebarConfig }) {
     href: config.homeHref,
     label: config.brand.title,
   };
+  const updateLabel = config.brandUpdateVersion
+    ? `${config.brandVersion ? `Version ${config.brandVersion}. ` : ""}Update available: version ${config.brandUpdateVersion}`
+    : undefined;
+  const versionContent = (
+    <>
+      {config.brandVersion ? (
+        <span aria-label={`Version ${config.brandVersion}`}>
+          v{config.brandVersion}
+        </span>
+      ) : null}
+      {config.brandUpdateVersion ? (
+        <span
+          aria-hidden="true"
+          data-slot="brand-update-indicator"
+          className="size-1.5 shrink-0 rounded-full bg-[var(--version-update-indicator)]"
+        />
+      ) : null}
+      {config.brandUpdateVersion && !config.brandUpdateHref ? (
+        <span className="sr-only">
+          Update available: version {config.brandUpdateVersion}
+        </span>
+      ) : null}
+    </>
+  );
   return (
     <nav
       aria-label={config.accessibleLabel}
@@ -278,82 +304,66 @@ export function ApplicationSidebar({ config }: { config: SidebarConfig }) {
             </RoutedLink>
           }
         >
-          <span
-            className={cn(
-              "flex min-w-0 flex-col gap-0.5",
-              !config.brandUpdateVersion &&
-                "lg:flex-row lg:items-baseline lg:gap-2.5",
-            )}
-          >
+          <span className="flex min-w-0 flex-col gap-0.5 lg:flex-row lg:items-baseline lg:gap-2.5">
             <RoutedLink className="truncate" item={homeItem}>
               {config.brand.title}
             </RoutedLink>
-            <span className="flex min-w-0 items-baseline gap-2">
-              {config.brandVersion ? (
-                <span
-                  aria-label={`Version ${config.brandVersion}`}
-                  className="shrink-0 font-mono text-xs font-normal text-muted"
-                >
-                  v{config.brandVersion}
-                </span>
-              ) : null}
-              {config.brandUpdateVersion ? (
-                <span
-                  className="truncate text-xs font-medium text-warning-soft-foreground"
-                  title={`${config.brand.title} v${config.brandUpdateVersion} is available`}
-                >
-                  {config.brandUpdateHref ? (
-                    <RoutedLink
-                      item={{
-                        id: "brand-update",
-                        kind: "link",
-                        href: config.brandUpdateHref,
-                        label: "Update available",
-                        accessibleLabel: `Update available: version ${config.brandUpdateVersion}`,
-                      }}
-                    />
-                  ) : (
-                    <span
-                      aria-label={`Update available: version ${config.brandUpdateVersion}`}
-                    >
-                      Update available
-                    </span>
-                  )}
-                </span>
-              ) : null}
-            </span>
+            {config.brandVersion || config.brandUpdateVersion ? (
+              <span
+                className="inline-flex shrink-0 items-center font-mono text-xs font-normal text-muted"
+                title={
+                  config.brandUpdateVersion
+                    ? `${config.brand.title} v${config.brandUpdateVersion} is available`
+                    : undefined
+                }
+              >
+                {config.brandUpdateVersion && config.brandUpdateHref ? (
+                  <RoutedLink
+                    className="inline-flex items-center gap-1.5 rounded-sm"
+                    item={{
+                      id: "brand-update",
+                      kind: "link",
+                      href: config.brandUpdateHref,
+                      label: "Update available",
+                      accessibleLabel: updateLabel,
+                    }}
+                  >
+                    {versionContent}
+                  </RoutedLink>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5">
+                    {versionContent}
+                  </span>
+                )}
+              </span>
+            ) : null}
           </span>
         </BrandLockup>
       </div>
-      <div className="grid min-h-0 flex-1 content-start gap-1 overflow-y-auto overscroll-contain px-3 py-4.5">
+      <div className="sidebar-body grid min-h-0 flex-1 content-start overflow-y-auto overscroll-contain">
+        {config.workspace}
         {config.groups.map((group) => (
-          <section className="grid gap-1 [&+&]:mt-2" key={group.id}>
+          <section className="sidebar-section" key={group.id}>
             {group.label ? (
-              <h2 className="px-2 py-1.5 text-xs font-medium text-muted">
-                {group.label}
-              </h2>
+              <h2 className="sidebar-section-heading">{group.label}</h2>
             ) : null}
-            <div className="grid gap-0.5">
+            <div className="sidebar-items">
               {group.items.map((item) =>
                 item.kind === "link" ? (
                   <RoutedLink
                     className={menuItemVariants().item({
                       className: cn(
-                        "min-w-0 text-sm",
-                        isCurrentLink(item, pathname)
-                          ? "bg-default font-medium text-foreground"
-                          : "font-normal text-foreground",
+                        "sidebar-item min-w-0 text-sm font-normal text-foreground",
+                        isCurrentLink(item, pathname) && "bg-default",
                       ),
                     })}
                     item={item}
                     key={item.id}
                   >
                     {item.icon ? (
-                      <HugeiconsIcon
-                        icon={item.icon}
-                        size={16}
-                        className="shrink-0"
-                      />
+                      <span aria-hidden="true" className="sidebar-item-icon">
+                        <HugeiconsIcon icon={item.icon} size={17} />
+                      </span>
                     ) : null}
                     <span className="min-w-0 flex-1 truncate">
                       {item.label}
@@ -392,7 +402,7 @@ export function ApplicationSidebar({ config }: { config: SidebarConfig }) {
         </div>
       ) : null}
       {config.footerActions?.length ? (
-        <div className="grid shrink-0 gap-1 border-t border-separator px-3 pb-4 pt-2">
+        <div className="sidebar-body sidebar-items shrink-0 border-t border-separator">
           {config.footerActions.map((item) => (
             <SidebarAction item={item} key={item.id} />
           ))}
@@ -411,7 +421,7 @@ function SidebarAction({ item }: { item: SidebarActionConfig }) {
         variant: item.destructive ? "danger" : "default",
       }).item({
         className: cn(
-          "min-w-0 text-start text-sm font-normal",
+          "sidebar-item min-w-0 text-start text-sm font-normal",
           item.destructive ? "text-danger" : "text-foreground",
         ),
       })}
@@ -423,12 +433,15 @@ function SidebarAction({ item }: { item: SidebarActionConfig }) {
       type="button"
     >
       {item.icon ? (
-        <HugeiconsIcon
+        <span
           aria-hidden="true"
-          icon={item.icon}
-          size={16}
-          className="shrink-0"
-        />
+          className={cn(
+            "sidebar-item-icon",
+            item.destructive && "text-inherit",
+          )}
+        >
+          <HugeiconsIcon icon={item.icon} size={17} />
+        </span>
       ) : null}
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
     </AriaButton>

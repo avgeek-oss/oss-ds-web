@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.0 — 2026-10-28
+
+- Align primary and secondary navigation icons at 17px; mute unselected icons, use the row text color when selected, and keep navigation labels at normal weight in both states. Share sidebar gutters, section spacing, no gaps between items in each category and 36px fine-input / 44px coarse-input rows.
+- Use matching 19px icons for page titles and secondary sidebar entity headings, including common account and team settings headings.
+- Align first sidebar category/field labels and entity-heading text at 18px below the divider, accounting for the centered desktop header row. Sidebar bodies use 18px top and 16px bottom padding.
+- Use 16px padding above and below application-page titles and at the page bottom. Keep secondary entity headings aligned with page titles.
+- Use 14px gaps between sidebar sections. Reserve matching space below entity-heading and navigation-row text, including mobile coarse-input rows; category labels have no vertical padding.
+- Document standalone table composition: tables own their frame, and widgets are for forms and metrics.
+- Replace the brand's visible update message with a small yellow dot beside the version, preserving the update link and accessible status without changing the brand layout.
+- Match header and drawer navigation toggles to notification and appearance button sizing, use foreground icons, and align the header toggle with the sidebar icon column. Clear hover on activation before the sidebar slides.
+- Add `SidebarConfig.workspace` and `WorkspaceSelector` for workspace selection in normal sidebar flow. The control uses the same native Select as filters, with Workspace as its field label and a trailing indicator. Workspace choices use text; Create Workspace keeps its plus icon and retains the current selection.
+
 ## 1.3.2 — 2026-10-27
 
 - `AgentChat`: tool lines, approval details and tables use the paragraph type size and line height, tool status icons grow to match, and transcript items get more vertical room.

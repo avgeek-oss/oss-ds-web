@@ -313,12 +313,14 @@ test("brand updates navigate independently from the home link", async () => {
     </RouteProvider>,
   );
   const update = document.querySelector<HTMLAnchorElement>(
-    'a[aria-label="Update available: version 1.0.1"]',
+    'a[aria-label="Version 1.0.0. Update available: version 1.0.1"]',
   );
   const home = document.querySelector<HTMLAnchorElement>(
     'a[href="/"]:not([tabindex])',
   );
   assert.ok(update && home);
+  assert.equal(update.textContent, "v1.0.0");
+  assert.ok(update.querySelector('[data-slot="brand-update-indicator"]'));
   assert.equal(update.getAttribute("href"), "/system-health");
   assert.equal(update.parentElement?.closest("a"), null);
   await act(async () => click(update, { ctrlKey: true }));

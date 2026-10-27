@@ -35,10 +35,10 @@ export function SecondarySidebarLayout({ children }: { children: ReactNode }) {
     >
       <div className="min-w-0 lg:grid lg:has-[[data-secondary-menu]]:grid-cols-[auto_minmax(0,1fr)]">
         <aside className="hidden min-w-0 border-r border-separator bg-background lg:has-[[data-secondary-menu]]:block lg:w-66 lg:sticky lg:top-[calc(4rem+var(--app-shell-top-offset,0px))] lg:h-[calc(100dvh-4rem-var(--app-shell-top-offset,0px))] lg:self-start">
-          <div className="h-full overflow-y-auto overscroll-contain px-3 py-4.5 has-[[data-secondary-header]]:pt-0">
+          <div className="h-full overflow-y-auto overscroll-contain">
             <nav
               aria-label="Page navigation"
-              className="grid content-start gap-3"
+              className="sidebar-body grid content-start"
               ref={setHost}
             />
           </div>
@@ -62,13 +62,8 @@ export function SecondarySection({
   const { registerSecondaryNavigation } = useMobileNavigation();
   useEffect(registerSecondaryNavigation, [registerSecondaryNavigation]);
   const content = (
-    <section
-      data-secondary-menu
-      className={cn("grid min-w-0 gap-1", className)}
-    >
-      {title ? (
-        <h2 className="px-2 py-1.5 text-xs font-medium text-muted">{title}</h2>
-      ) : null}
+    <section data-secondary-menu className={cn("sidebar-section", className)}>
+      {title ? <h2 className="sidebar-section-heading">{title}</h2> : null}
       {children}
     </section>
   );
@@ -90,12 +85,9 @@ export function SecondaryEntityHeader({
         <div
           data-secondary-menu
           data-secondary-header
-          className="order-[-2] flex min-w-0 items-center gap-2 px-2 pb-1.5 text-sm font-medium text-foreground lg:min-h-14 lg:pt-5 lg:pb-1 lg:text-lg lg:leading-7"
+          className="sidebar-entity-header order-[-2] flex min-w-0 items-center gap-2 px-2 text-sm font-medium text-foreground lg:text-lg lg:leading-7"
         >
-          <span
-            aria-hidden="true"
-            className="inline-flex shrink-0 [&_img]:size-6 [&_svg]:size-6"
-          >
+          <span aria-hidden="true" className="sidebar-heading-icon">
             {icon}
           </span>
           {typeof children === "string" ? (
@@ -138,14 +130,17 @@ export function SecondaryItems({
   const { close } = useContext(SecondaryContext);
   return (
     <SecondarySection title={title}>
-      <div className="grid gap-0.5">
+      <div className="sidebar-items">
         {items.map((item) => {
           const content = (
             <>
               {!item.disabled ? (
                 <span
                   aria-hidden="true"
-                  className="inline-flex shrink-0 [&_img]:size-4.5 [&_svg]:size-4.5"
+                  className={cn(
+                    "sidebar-item-icon",
+                    item.destructive && "text-inherit",
+                  )}
                 >
                   {item.icon ?? <HugeiconsIcon icon={Menu01Icon} />}
                 </span>
@@ -167,14 +162,14 @@ export function SecondaryItems({
               variant: item.destructive ? "danger" : "default",
             }).item({
               className: cn(
-                "min-w-0 text-start text-sm",
+                "sidebar-item min-w-0 text-start text-sm font-normal",
                 selected === item.id
                   ? item.destructive
-                    ? "bg-danger-soft font-medium text-danger-soft-foreground"
-                    : "bg-default font-medium text-foreground"
+                    ? "bg-danger-soft text-danger-soft-foreground"
+                    : "bg-default text-foreground"
                   : item.destructive
-                    ? "font-normal text-danger"
-                    : "font-normal text-foreground",
+                    ? "text-danger"
+                    : "text-foreground",
               ),
             }),
           };

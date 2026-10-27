@@ -43,7 +43,7 @@ export function SettingsPageTitle({
     <span className="inline-flex min-w-0 items-center gap-2">
       <HugeiconsIcon
         icon={icons[section]}
-        size={24}
+        size={19}
         className="shrink-0"
         aria-hidden="true"
       />

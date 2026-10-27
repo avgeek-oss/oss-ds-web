@@ -1,6 +1,6 @@
 {
   "name": "@avgeek-oss/design-system",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Shared React components, application layouts and UI patterns for Avgeek OSS apps.",
   "type": "module",
   "license": "Apache-2.0",
@@ -766,6 +766,10 @@
     "./patterns/date-time-range-picker": {
       "types": "./dist/patterns/date-time-range-picker.d.ts",
       "import": "./dist/patterns/date-time-range-picker.js"
+    },
+    "./navigation/workspace-selector": {
+      "types": "./dist/navigation/workspace-selector.d.ts",
+      "import": "./dist/navigation/workspace-selector.js"
     }
   }
 }

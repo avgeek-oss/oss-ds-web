@@ -7,6 +7,11 @@ export {
 } from "./layouts/app-shell.js";
 export { AppLayout } from "./navigation/app-layout.js";
 export {
+  WorkspaceSelector,
+  type WorkspaceSelectorProps,
+  type WorkspaceSelectorItem,
+} from "./navigation/workspace-selector.js";
+export {
   BreadcrumbTrail,
   BreadcrumbDropdown,
   BreadcrumbSelect,
