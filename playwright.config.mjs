@@ -34,13 +34,14 @@ for (const width of [390, 1280]) {
 export default defineConfig({
   testDir: "test/browser",
   testMatch: "**/*.spec.mjs",
-  // Two workers, measured on the 4-vCPU GitHub runner in run 40488203862:
-  // the full suite passed 3 of 3 times at 2 workers (447-580 s) and at 1
-  // worker took 911 s. At 4 workers 2 of 3 runs failed: no toBeFocused
-  // assertion failed, but keyboard paths did (Enter on a focused Revoke
-  // button opened no dialog three times, focus did not move into a dialog
-  // once) and one Ctrl+click new-tab wait timed out. Raise this only after
-  // those keyboard paths pass repeatedly at the higher count.
+  // Two workers, measured on the 4-vCPU GitHub runner. Run 40488203862: the
+  // full suite passed 3 of 3 times at 2 workers (447-580 s), took 911 s at 1
+  // worker, and failed 2 of 3 times at 4 workers, mostly on the Revoke
+  // keyboard path, since fixed by reaching grid row actions by keyboard
+  // (focusRowAction). Run 40500565361: 4 workers passed 2 of 3 times; the
+  // failure was a Ctrl+click whose new tab never opened, which failed at 2
+  // workers in the same run too. Raise this once those new-tab waits are
+  // reliable at the higher count.
   workers: 2,
   forbidOnly: true,
   outputDir: "artifacts/browser/results",
