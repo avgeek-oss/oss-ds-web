@@ -7,8 +7,10 @@ import { createExampleSourceTransform } from "../.storybook/example-source";
 
 test("catalogue source includes real composition and sample callbacks, rather than a private preview import", () => {
   const transform = createExampleSourceTransform();
+  // The Button example's package import and Example export are checked in
+  // the built docs by test/browser/storybook.spec.mjs; these two stories
+  // cover sample callbacks and local preview components.
   for (const file of [
-    "stories/Primitives/Buttons/Button.stories.tsx",
     "stories/Patterns/Account Settings/ProfileSettings.stories.tsx",
     "stories/Patterns/Team Settings/RemoveMemberDialog.stories.tsx",
   ]) {

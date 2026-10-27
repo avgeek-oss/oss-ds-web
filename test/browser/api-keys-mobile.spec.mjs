@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures.mjs";
+import { test, expect, focusRowAction, settleFocus } from "./fixtures.mjs";
 
 test("Codex metadata connections show a friendly name, logo and revocation title", async ({
   page,
@@ -45,7 +45,7 @@ test("Codex metadata connections show a friendly name, logo and revocation title
   const revoke = table
     .getByRole("button", { name: "Revoke", exact: true })
     .first();
-  await revoke.focus();
+  await focusRowAction(page, revoke);
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", {
     name: "Revoke Codex?",
@@ -178,12 +178,13 @@ test("API keys retain every field, native row headers and reachable actions at m
     path: testInfo.outputPath("metadata.png"),
     animations: "disabled",
   });
-  await revoke.focus();
+  await focusRowAction(page, revoke);
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: /Revoke Automation key/ });
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
+  await settleFocus(page);
   await expect(revoke).toBeFocused();
   if (touch) await revoke.tap();
   else await page.keyboard.press("Enter");

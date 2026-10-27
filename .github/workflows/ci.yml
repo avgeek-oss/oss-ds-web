@@ -269,5 +269,5 @@ jobs:
         run: npm publish ./artifacts/avgeek-oss-design-system-*.tgz --dry-run --ignore-scripts --registry=https://registry.npmjs.org
       - name: Publish verified tarball
         run: node scripts/publish-package.mjs
-      - name: Verify registry package and fresh consumers
+      - name: Verify the registry serves the verified bytes
         run: pnpm test:published

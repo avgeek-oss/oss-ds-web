@@ -96,4 +96,41 @@ export const test = base.extend({
   },
 });
 
+// A react-aria grid takes focus back to its row once running CSS transitions
+// end when a control inside a cell was focused with element.focus(), so a key
+// pressed after locator.focus() can land on the row. Reach a row action the
+// way a keyboard user does instead: the row, arrow keys to the action's cell,
+// then Tab into the action.
+export async function focusRowAction(page, action) {
+  const cell = action.locator('xpath=ancestor::*[@role="gridcell"][1]');
+  await action.evaluate((element) => element.closest('[role="row"]').focus());
+  for (let step = 0; ; step += 1) {
+    if (
+      await cell.evaluate(
+        (element) => element === globalThis.document.activeElement,
+      )
+    )
+      break;
+    assert.ok(step < 12, "Arrow keys must reach the row action's cell");
+    await page.keyboard.press("ArrowRight");
+  }
+  await page.keyboard.press("Tab");
+  await expect(action).toBeFocused();
+}
+
+// Waits until no CSS transition runs, which is when a grid applies a deferred
+// focus move, and then two frames for focus restoration to answer it.
+export async function settleFocus(page) {
+  await page.evaluate(async () => {
+    await Promise.all(
+      globalThis.document
+        .getAnimations()
+        .filter((animation) => animation instanceof globalThis.CSSTransition)
+        .map((animation) => animation.finished.catch(() => {})),
+    );
+    for (let frame = 0; frame < 2; frame += 1)
+      await new Promise((resolve) => globalThis.requestAnimationFrame(resolve));
+  });
+}
+
 export { expect };

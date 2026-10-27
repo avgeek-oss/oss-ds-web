@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures.mjs";
+import { test, expect, focusRowAction, settleFocus } from "./fixtures.mjs";
 
 test("API-key confirmation restores its connected row action after Escape and Cancel", async ({
   page,
@@ -15,10 +15,16 @@ test("API-key confirmation restores its connected row action after Escape and Ca
   await expect(page.locator("body.sb-show-main")).toBeVisible();
   const opener = page.getByRole("button", { name: "Revoke", exact: true });
   const dialog = page.getByRole("dialog", { name: "Revoke Automation?" });
-  for (const dismissal of ["Escape", "Cancel", "Escape"]) {
-    await opener.focus();
+  for (const [index, dismissal] of ["Escape", "Cancel", "Escape"].entries()) {
+    if (index === 0) await focusRowAction(page, opener);
+    else {
+      // The previous dismissal returned focus to the opener; it must still
+      // hold once the grid has applied any deferred focus move.
+      await settleFocus(page);
+      await expect(opener).toBeFocused();
+    }
     if (touch) await opener.tap();
-    else await opener.press("Enter");
+    else await page.keyboard.press("Enter");
     await expect(dialog).toBeVisible();
     await expect
       .poll(() =>
