@@ -107,7 +107,7 @@
     "prettier": "3.9.9",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "storybook": "10.6.1",
+    "storybook": "10.6.2",
     "stylelint": "^17.16.0",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
