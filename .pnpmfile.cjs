@@ -1,20 +1,15 @@
-// TypeScript 7 has no programmatic compiler API. typescript-eslint and the
-// packages behind its type-aware rules declare typescript as a peer, which
-// would resolve to the workspace's TypeScript 7. Neither overrides nor
-// packageExtensions can replace a peer, so this hook turns that peer into a
-// dependency on @typescript/typescript6: the TypeScript 6 API, published by
-// the TypeScript team for tools that still need it. tsc stays TypeScript 7.
-// In this repository Storybook's docs also read component props through the
-// API: react-docgen-typescript and the
+// TypeScript 7 has no programmatic compiler API. Storybook's docs read
+// component props through it: react-docgen-typescript and the
 // @joshwooding/vite-plugin-react-docgen-typescript plugin that runs it
-// declare typescript as a peer too, so they are listed below as well.
+// declare typescript as a peer, which would resolve to the workspace's
+// TypeScript 7. Neither overrides nor packageExtensions can replace a peer,
+// so this hook turns that peer into a dependency on @typescript/typescript6:
+// the TypeScript 6 API, published by the TypeScript team for tools that
+// still need it. tsc stays TypeScript 7, and linting (oxlint) needs no API.
 const TYPESCRIPT_6 = "npm:@typescript/typescript6@6.0.2";
 
 function needsTypeScriptApi(name) {
   return (
-    name === "typescript-eslint" ||
-    name === "ts-api-utils" ||
-    name.startsWith("@typescript-eslint/") ||
     name === "react-docgen-typescript" ||
     name === "@joshwooding/vite-plugin-react-docgen-typescript"
   );
