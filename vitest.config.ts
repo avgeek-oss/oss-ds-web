@@ -19,6 +19,6 @@ export default defineConfig({
       instances: [{ browser: "chromium" }],
     },
     testTimeout: 30000,
-    maxWorkers: 2,
+    maxWorkers: 4,
   },
 });
