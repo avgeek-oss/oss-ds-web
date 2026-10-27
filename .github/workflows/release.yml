@@ -1,8 +1,9 @@
 name: Cut release
 # On-demand replacement for pushing a release tag by hand. It tags the
 # current main commit as v<package.json version> and starts the
-# "Validate and publish" workflow on that tag, which verifies the package
-# in full and publishes it. A tag pushed with the workflow token does not
+# "Validate and publish" workflow on that tag, which publishes the package
+# that the main run of the same commit verified, after checking its
+# integrity. A tag pushed with the workflow token does not
 # trigger other workflows on its own, so the publish run is started
 # explicitly; manual dispatch is one of the events that token may start.
 on:
