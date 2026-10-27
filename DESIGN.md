@@ -6,7 +6,7 @@ Towbar is the baseline for shared application layouts, features, and presentatio
 - [Forms and feedback](docs/forms.md): surface variants, validation, pending states, notifications.
 - [Shared application patterns](docs/patterns.md): typed data, callbacks, and application boundaries.
 - [Component catalog](docs/components.md): primitive source files and Storybook entries.
-- [Contributor rules](AGENTS.md): component ownership, APIs, lint, styles, and validation.
+- [Development rules](AGENTS.md): component ownership, APIs, lint, styles, and validation.
 
 Use semantic tokens such as `background`, `surface`, `surface-secondary`, `foreground`, `muted`, `accent`, `danger`, and `separator`. Do not introduce raw colors in application components. Chart series use `--chart-requested`, `--chart-failed`, and `--chart-succeeded`; applications can override these semantic tokens.
 

@@ -46,6 +46,8 @@ Wrap the shell in `RouteProvider` with the current pathname and navigation callb
 
 ## Development
 
+These are development notes for the maintainers. We are not accepting contributions from public sources, to curb automated pull requests and because there are no dedicated resources to review and sign them off. Feedback and issues are welcome in this repository; we triage them and strive to fix them at the earliest. Report security vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+
 ```sh
 pnpm install --frozen-lockfile
 pnpm exec playwright install chromium
@@ -56,7 +58,7 @@ pnpm pack
 
 Storybook runs on port 5012 with the React/Vite framework. Fixtures cover primitives, shell navigation, auth layouts, settings tables, empty states, and charts. Use the Theme toolbar for light/dark previews and responsive viewports for mobile layouts. Each component has a Master story, named examples, copyable source and API references. `Show code` includes the composition and local sample callbacks, with imports rewritten to public package subpaths; preview helpers remain unpublished. Native primitives link to HeroUI's API documentation.
 
-Contributor rules are in [AGENTS.md](AGENTS.md). `pnpm verify` includes strict source/studio type checks, code and CSS lint, tests, clean build, Storybook export, rendered navigation, notification, toast, loading and clipboard interaction tests, and a tarball installation/type/build check outside this checkout. It saves the verified candidate and report in the ignored `artifacts/` folder. Built declarations include maps to the matching packaged source.
+Development rules are in [AGENTS.md](AGENTS.md). `pnpm verify` includes strict source/studio type checks, code and CSS lint, tests, clean build, Storybook export, rendered navigation, notification, toast, loading and clipboard interaction tests, and a tarball installation/type/build check outside this checkout. It saves the verified candidate and report in the ignored `artifacts/` folder. Built declarations include maps to the matching packaged source.
 
 Browser cases live in `test/browser/*.spec.mjs` and run together through `pnpm test:browser` after `pnpm build:storybook`. The shared fixture serves that export and owns theme setup and cleanup. Use the existing command with Playwright filters to investigate a case; do not add a package script for each regression. Reports and failure screenshots stay in `artifacts/browser/`.
 
