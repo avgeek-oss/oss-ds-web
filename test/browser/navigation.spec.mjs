@@ -104,6 +104,391 @@ test("sidebar links preserve navigation, active sections and mobile dismissal @n
       .getByRole("link", { name: "Account settings", exact: true }),
   ).not.toHaveAttribute("aria-current", "page");
 });
+test("sidebar filters update results and survive mobile navigation dismissal", async ({
+  page,
+  fixtureUrl,
+  touch,
+}, testInfo) => {
+  await page.goto(fixtureUrl("stories/Layouts/Shell.stories.tsx", "Filters"));
+  const toggle = page.getByRole("button", { name: "Toggle navigation" });
+  const count = page.locator('output[aria-label="Matching tasks"]');
+  await expect(count).toHaveText("5 tasks");
+  if (touch) await press(toggle, touch);
+  const secondary = page.getByRole("navigation", { name: "Page navigation" });
+  const status = secondary.getByRole("button", { name: /Status$/ });
+  const workspace = page.getByRole("button", { name: /Default Workspace/ });
+  const fieldShape = (element) => {
+    const style = globalThis.getComputedStyle(element);
+    return {
+      height: element.getBoundingClientRect().height,
+      radius: style.borderRadius,
+      paddingLeft: style.paddingLeft,
+      paddingRight: style.paddingRight,
+    };
+  };
+  assert.deepEqual(
+    await workspace.evaluate(fieldShape),
+    await status.evaluate(fieldShape),
+  );
+  const workspaceLabel = await workspace
+    .locator("..")
+    .getByText("Workspace", { exact: true })
+    .boundingBox();
+  const entityHeaderText = await secondary
+    .locator("[data-secondary-header] > :last-child")
+    .boundingBox();
+  const viewSection = secondary
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Views", exact: true }) });
+  const viewHeading = await viewSection
+    .getByRole("heading", { name: "Views", exact: true })
+    .boundingBox();
+  const lastViewLabel = await viewSection
+    .getByRole("link")
+    .last()
+    .locator(":scope > span:nth-child(2)")
+    .boundingBox();
+  const filterHeading = await secondary
+    .getByRole("heading", { name: "Filters", exact: true })
+    .boundingBox();
+  assert.ok(
+    workspaceLabel &&
+      entityHeaderText &&
+      viewHeading &&
+      lastViewLabel &&
+      filterHeading,
+  );
+  assert.ok(
+    Math.abs(workspaceLabel.y - entityHeaderText.y) < 1,
+    "The first field label and entity heading text start at the same height",
+  );
+  assert.ok(
+    Math.abs(
+      viewHeading.y -
+        entityHeaderText.y -
+        entityHeaderText.height -
+        (filterHeading.y - lastViewLabel.y - lastViewLabel.height),
+    ) < 1,
+    "The gap below the heading text matches the gap from navigation text to the next category",
+  );
+  if (touch) await press(status, touch);
+  else {
+    await status.focus();
+    await page.keyboard.press("Enter");
+  }
+  await press(
+    page.getByRole("option", { name: "In progress", exact: true }),
+    touch,
+  );
+  await expect(count).toHaveText("2 tasks");
+  await expect(secondary).toBeVisible();
+  await press(secondary.getByRole("button", { name: /Assignee$/ }), touch);
+  await page.getByPlaceholder("Search assignees…").fill("Alex");
+  await press(
+    page.getByRole("option", { name: "Alex Morgan", exact: true }),
+    touch,
+  );
+  await expect(count).toHaveText("1 task");
+  await expect(secondary).toBeVisible();
+  if (touch) {
+    await press(
+      page.getByRole("button", { name: "Close navigation", exact: true }),
+      touch,
+    );
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(toggle).toBeFocused();
+  }
+  await expect(
+    page.getByRole("row", { name: "Review sidebar spacing", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("row", { name: "Audit workspace access", exact: true }),
+  ).toHaveCount(0);
+  if (touch) await press(toggle, touch);
+  await expect(status).toContainText("In progress");
+  await expect(
+    secondary.getByRole("button", { name: /Assignee$/ }),
+  ).toContainText("Alex Morgan");
+  await press(
+    secondary.getByRole("button", { name: "Reset filters", exact: true }),
+    touch,
+  );
+  await expect(count).toHaveText("5 tasks");
+  await expect(status).toContainText("All status");
+  await expect(
+    secondary.getByRole("button", { name: "Reset filters", exact: true }),
+  ).toBeDisabled();
+  await page.screenshot({
+    path: testInfo.outputPath("sidebar-filters.png"),
+    animations: "disabled",
+  });
+});
+
+test("workspace and sidebar roles share geometry and retain selection actions", async ({
+  page,
+  fixtureUrl,
+  touch,
+}, testInfo) => {
+  await page.goto(fixtureUrl("stories/Layouts/Shell.stories.tsx", "Workspace"));
+  const toggle = page.locator(".navigation-toggle");
+  if (!touch) await toggle.hover();
+  const toggleBounds = await toggle.boundingBox();
+  const appearanceBounds = await page
+    .locator('header [data-slot="theme-switcher"]')
+    .boundingBox();
+  assert.ok(toggleBounds && appearanceBounds);
+  assert.equal(toggleBounds.width, appearanceBounds.width);
+  assert.equal(toggleBounds.height, appearanceBounds.height);
+  if (!touch)
+    await page.screenshot({
+      path: testInfo.outputPath("navigation-toggle-hover.png"),
+      animations: "disabled",
+    });
+  if (touch) await press(toggle, touch);
+  await expect(toggle).toHaveCSS(
+    "transform",
+    /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/,
+  );
+  const controls = await page.evaluate((touchInput) => {
+    const headerToggle =
+      globalThis.document.querySelector(".navigation-toggle");
+    const header = headerToggle.closest("header");
+    const headerIcon = headerToggle.querySelector("svg");
+    const sidebarIcon = globalThis.document.querySelector(
+      'nav[aria-label="Page navigation"] .sidebar-item-icon svg',
+    );
+    const sidebar = sidebarIcon.closest("nav");
+    return {
+      foreground: globalThis.getComputedStyle(globalThis.document.body).color,
+      headerIconInset:
+        headerIcon.getBoundingClientRect().left -
+        header.getBoundingClientRect().left,
+      sidebarIconInset:
+        sidebarIcon.getBoundingClientRect().left -
+        sidebar.getBoundingClientRect().left,
+      buttons: Array.from(
+        globalThis.document.querySelectorAll(".sidebar-navigation-toggle"),
+      )
+        .filter((element) => element.getBoundingClientRect().width > 0)
+        .map((element) => {
+          const box = element.getBoundingClientRect();
+          const icon = element.querySelector("svg").getBoundingClientRect();
+          return {
+            width: box.width,
+            height: box.height,
+            color: globalThis.getComputedStyle(element).color,
+            iconWidth: icon.width,
+            iconHeight: icon.height,
+            touchTarget: touchInput
+              ? {
+                  width: parseFloat(
+                    globalThis.getComputedStyle(element, "::before").width,
+                  ),
+                  height: parseFloat(
+                    globalThis.getComputedStyle(element, "::before").height,
+                  ),
+                }
+              : null,
+          };
+        }),
+    };
+  }, touch);
+  assert.ok(
+    Math.abs(controls.headerIconInset - controls.sidebarIconInset) < 0.1,
+    "The header toggle icon aligns with the sidebar icon column",
+  );
+  for (const control of controls.buttons) {
+    assert.equal(control.width, appearanceBounds.width);
+    assert.equal(control.height, appearanceBounds.height);
+    assert.equal(control.color, controls.foreground);
+    assert.ok(Math.abs(control.iconWidth - 17) < 0.1);
+    assert.ok(Math.abs(control.iconHeight - 17) < 0.1);
+    if (touch) {
+      assert.equal(control.touchTarget.width, 44);
+      assert.equal(control.touchTarget.height, 44);
+    }
+  }
+  const primary = page
+    .getByRole("navigation", { name: "Primary navigation", exact: true })
+    .filter({
+      has: page.getByText("Workspace", { exact: true }),
+    });
+  const secondary = page.getByRole("navigation", {
+    name: "Page navigation",
+    exact: true,
+  });
+  const workspace = primary.getByRole("button", { name: /Default Workspace/ });
+  await expect(workspace.locator("svg")).toHaveCount(1);
+  const indicatorLayout = await workspace.evaluate((element) => {
+    const indicator = element.querySelector("svg")?.getBoundingClientRect();
+    const label = element.querySelector("span")?.getBoundingClientRect();
+    return indicator && label
+      ? { indicatorLeft: indicator.left, labelRight: label.right }
+      : null;
+  });
+  assert.ok(
+    indicatorLayout &&
+      indicatorLayout.indicatorLeft >= indicatorLayout.labelRight,
+    "The dropdown indicator stays to the right of the workspace name",
+  );
+  const workspaceHeading = await primary
+    .getByText("Workspace", { exact: true })
+    .boundingBox();
+  const accountHeading = await secondary
+    .getByRole("heading", { name: "Account", exact: true })
+    .boundingBox();
+  assert.ok(workspaceHeading && accountHeading);
+  assert.ok(
+    Math.abs(workspaceHeading.y - accountHeading.y) < 1,
+    "First section headings align across sidebar roles",
+  );
+  for (const navigation of [primary, secondary]) {
+    const dimensions = await navigation
+      .locator(".sidebar-item-icon svg")
+      .evaluateAll((icons) =>
+        icons.map((icon) => {
+          const bounds = icon.getBoundingClientRect();
+          const row = icon.closest(".sidebar-item");
+          const category = row
+            .closest("nav")
+            .querySelector(".sidebar-section-heading");
+          return {
+            width: bounds.width,
+            height: bounds.height,
+            color: globalThis.getComputedStyle(icon).color,
+            textColor: globalThis.getComputedStyle(row).color,
+            mutedColor: globalThis.getComputedStyle(category).color,
+            weight: globalThis.getComputedStyle(row).fontWeight,
+            selected: row.getAttribute("aria-current") === "page",
+          };
+        }),
+      );
+    assert.ok(dimensions.length > 0);
+    for (const icon of dimensions) {
+      assert.ok(Math.abs(icon.width - 17) < 0.1);
+      assert.ok(Math.abs(icon.height - 17) < 0.1);
+      assert.equal(icon.weight, "400");
+      assert.equal(
+        icon.color,
+        icon.selected ? icon.textColor : icon.mutedColor,
+      );
+    }
+    const rows = await navigation
+      .locator(".sidebar-item")
+      .evaluateAll((items) =>
+        items.map((item) => item.getBoundingClientRect().height),
+      );
+    assert.ok(rows.length > 0);
+    for (const height of rows) assert.equal(height, touch ? 44 : 36);
+    const gaps = await navigation
+      .locator(".sidebar-section")
+      .evaluateAll((sections) =>
+        sections.slice(1).map((section, index) => {
+          const previous = sections[index].getBoundingClientRect();
+          return section.getBoundingClientRect().top - previous.bottom;
+        }),
+      );
+    for (const gap of gaps) assert.ok(Math.abs(gap - 14) < 0.1);
+  }
+  await page.screenshot({
+    path: testInfo.outputPath("sidebar-geometry.png"),
+    animations: "disabled",
+  });
+  await press(workspace, touch);
+  const menu = page.getByRole("listbox");
+  const design = menu.getByRole("option", {
+    name: "Design",
+    exact: true,
+  });
+  await expect(design.locator(":scope > svg")).toHaveCount(0);
+  await press(design, touch);
+  const selected = primary.getByRole("button", { name: /Design Workspace/ });
+  await expect(selected).toBeVisible();
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  await press(selected, touch);
+  const create = page.getByRole("option", {
+    name: "Create Workspace",
+    exact: true,
+  });
+  await expect(create.locator(":scope > svg")).toHaveCount(1);
+  await press(create, touch);
+  await expect(
+    primary.getByRole("button", { name: /Design Workspace/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Create workspace preview", { exact: true }),
+  ).toBeVisible();
+});
+
+test.describe("navigation pointer feedback", () => {
+  test.use({ hasTouch: false });
+
+  test("header navigation matches sibling controls and clears hover before drawer exit", async ({
+    page,
+    fixtureUrl,
+    width,
+    reducedMotion,
+  }, testInfo) => {
+    await page.goto(
+      fixtureUrl("stories/Layouts/Shell.stories.tsx", "Workspace"),
+    );
+    await page.addStyleTag({
+      content:
+        ".drawer__dialog { --drawer-exit-duration: 600ms !important; } .drawer__backdrop[data-exiting] { transition-duration: 600ms !important; }",
+    });
+    const toggle = page.locator(".navigation-toggle");
+    const appearance = page.locator('header [data-slot="theme-switcher"]');
+    const notification = page.getByRole("button", { name: /^Notifications/ });
+    const dimensions = await Promise.all(
+      [toggle, appearance, notification].map(async (control) => {
+        const box = await control.boundingBox();
+        assert.ok(box);
+        return { width: box.width, height: box.height };
+      }),
+    );
+    assert.deepEqual(dimensions[0], dimensions[1]);
+    assert.deepEqual(dimensions[0], dimensions[2]);
+    await toggle.hover();
+    await expect(toggle).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await page.screenshot({
+      path: testInfo.outputPath("matching-header-controls.png"),
+      animations: "disabled",
+      clip: { x: 0, y: 0, width, height: 80 },
+    });
+    await page.mouse.down();
+    await expect(toggle).toHaveAttribute("data-hover-suppressed", "true");
+    await expect(toggle).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await page.mouse.up();
+    await expect(toggle).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    if (width < 1024) {
+      const dialog = page.getByRole("dialog", {
+        name: "Navigation",
+        exact: true,
+      });
+      const close = dialog.getByRole("button", {
+        name: "Close navigation",
+        exact: true,
+      });
+      await close.hover();
+      await expect(close).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      await page.mouse.down();
+      await expect(close).toHaveAttribute("data-hover-suppressed", "true");
+      await expect(close).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      await page.mouse.up();
+      if (reducedMotion !== "reduce") {
+        await expect(
+          page.locator(".drawer__backdrop[data-exiting=true]"),
+        ).toBeVisible();
+        await expect(close).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+      }
+      await expect(dialog).toHaveCount(0);
+    }
+    await toggle.hover();
+    await expect(toggle).not.toHaveAttribute("data-hover-suppressed", "true");
+    await expect(toggle).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+});
+
 test("notification activation waits, retries and preserves native modified clicks @new-tab", async ({
   page,
   context,

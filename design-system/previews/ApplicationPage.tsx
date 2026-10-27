@@ -12,6 +12,7 @@ function Example() {
       <A.AppShell.Content>
         <A.ApplicationPage
           title="General"
+          titleContent={<A.SettingsPageTitle section="general" />}
           description="Name and details shown to everyone on this team."
           breadcrumbAncestors={[
             { label: "Team settings", href: "/team/general" },

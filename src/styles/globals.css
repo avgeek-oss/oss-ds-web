@@ -5,6 +5,7 @@
 @import "../patterns/auth/styles.css";
 @import "../patterns/pages/styles.css";
 @import "../patterns/expandable-attribute-list.css";
+@import "../layouts/sidebar.css";
 
 @theme {
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
@@ -51,6 +52,7 @@
   --warning-foreground: var(--snow);
   --success-foreground: var(--snow);
   --workspace-page-content-width: 80rem;
+  --version-update-indicator: var(--color-yellow-500);
   --chart-requested: oklch(0.627 0.138 254.2);
   --chart-succeeded: oklch(0.639 0.109 151.7);
   --chart-failed: oklch(0.622 0.148 24.9);
@@ -102,14 +104,14 @@
   color: inherit;
 }
 
-:where([data-secondary-menu]) :is(.label, label) {
+:where(.sidebar-body, [data-secondary-menu]) :is(.label, label) {
   padding-inline-start: calc(var(--spacing) * 2);
   font-size: var(--text-xs);
   line-height: var(--text-xs--line-height);
   font-weight: var(--font-weight-medium);
 }
 
-:where([data-secondary-menu])
+:where(.sidebar-body, [data-secondary-menu])
   :is(.label, label):not(.label--invalid):not([data-invalid="true"] *) {
   color: var(--muted);
 }

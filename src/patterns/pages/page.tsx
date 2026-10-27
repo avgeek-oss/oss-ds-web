@@ -42,7 +42,7 @@ function TitledPage({
     <Page
       {...props}
       lead={
-        <PageSection className="py-5" xPadding="none" yPadding="none">
+        <PageSection className="py-4" xPadding="none" yPadding="none">
           <header
             className={cn(
               "flex min-h-8 items-center justify-between gap-5",

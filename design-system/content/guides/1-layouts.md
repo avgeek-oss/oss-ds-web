@@ -3,8 +3,8 @@
 ## Shell and pages
 
 - Use `AppShell` with `ApplicationPage` for product pages and `AuthScreen` for public auth; auth adds no page-shell padding.
-- `AppShell.Content` owns 16px side gutters, no top padding and 80px bottom padding.
-- `ApplicationPage` owns 20px above and below the title. Never add another top padding or gap around content.
+- `AppShell.Content` owns 16px side gutters, no top padding and 16px bottom padding.
+- `ApplicationPage`, `ContentPage` and `StatusPage` own 16px above and below the title. Never add another top padding or gap around content.
 - Page headings wrap by default. Set `titleOverflow="truncate"` to keep title and actions on one row; keep action groups compact.
 - `AppLayout`'s optional `aside` docks a 26rem panel beside the page from 64rem and is a full-width right drawer below; only one drawer opens at a time.
 - Auth below 640px: top-aligned, 32px vertical and 16px horizontal padding plus safe-area insets. Desktop: centered, 24px gutters.
@@ -12,10 +12,12 @@
 ## Navigation
 
 - Set `activePath` when a destination is one child of a section, e.g. `href="/settings/profile"`, `activePath="/settings"`.
-- Sidebar items keep HeroUI's native menu-item styles, 36px minimum height.
-- The navigation toggle uses `PanelLeftIcon` at 20px inside a 44px circular button.
-- Secondary sidebar: 18px vertical, 12px horizontal padding. `SecondarySection` labels are 12px medium, muted, 8px inset.
+- Sidebar items share 17px icons and native menu hover/focus states; neutral icons are muted until selected, then use the text color. Selected labels keep normal weight; destructive icons keep their semantic color; minimum height is 36px for fine input and 44px for coarse input.
+- Sidebar bodies and footer action groups use 18px top, 16px bottom and 12px horizontal padding, with 14px gaps between blocks and no gaps between navigation items. On desktop, a body with an entity header uses 16px top padding: the centered 28px text in its 32px row starts at 18px, matching category/field labels. Mobile bodies use 18px top padding throughout. Entity headers reserve the same space below their text as navigation rows, keeping the text-to-category gaps equal for fine and coarse input. Category labels have no extra vertical padding. Add workspace selection through `SidebarConfig.workspace` and `WorkspaceSelector`; its native Select uses Workspace as a field label, text-only choices, and a plus icon for Create Workspace.
+- Header and drawer navigation toggles use a 17px foreground `PanelLeftIcon`, matching header actions at 40px below 768px and 36px above. Coarse-input targets extend to 44px. Hover clears on activation. The header icon aligns with the sidebar icon column.
+- Secondary sidebar: align the first category/field label and entity-heading text at 18px below the divider; use the desktop row compensation above. Field labels in both sidebars are 12px medium, muted, 8px inset.
 - Give `SecondaryItems` an `href` for navigation; items without one are action buttons calling `onSelect(id)`.
+- Sidebar categories can also use `SecondarySection` with filter fields, sorting, switches and actions. Keep native form spacing between controls; keep navigation lists gapless. See `Layouts / Shell / Filters` in Storybook.
 - Account settings use `Account Settings / <page>` at `/settings/<page>`; team settings use `Team Settings / <page>` at `/team-settings/<page>`.
 
 ## Breadcrumbs
@@ -32,13 +34,14 @@
 
 ## Icons and type
 
-- Page-title icons 24px; secondary sidebar headings 18px; navigation, widgets, tables and controls 16px; empty states 32px.
+- Page-title and secondary sidebar heading icons 19px; navigation 17px; widgets, tables and controls 16px; empty states 32px.
 - `text-sm` for body and labels, `text-lg leading-7 font-medium` for page titles, `text-xs` for metadata.
 - Numeric widget values use `font-medium` and tabular numbers.
 
 ## Tables and widgets
 
 - Use `ResourceTable` for record lists from items and columns; compose `Table` directly otherwise.
+- Render tables directly in page content. Never put a table or table pattern inside `Widget`; tables own their frame. Put counts in the page heading or table footer.
 - Set `mobileLayout="stacked"` for a two-column detail grid below 640px; `mobileFullWidth` spans long values.
 - Cells hold at most two lines: a value and optional metadata. Put chips and extra attributes in their own columns.
 - Right-aligned actions need a right-aligned header. Footers are `text-xs` muted.

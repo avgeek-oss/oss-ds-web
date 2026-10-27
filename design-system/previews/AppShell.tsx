@@ -123,7 +123,16 @@ function Shell() {
                 accessibleLabel: "Primary navigation",
                 brand,
                 brandVersion: "1.2.19",
+                brandUpdateVersion: "1.4.0",
+                brandUpdateHref: "/overview",
                 homeHref: "/overview",
+                workspace: (
+                  <A.WorkspaceSelector
+                    items={[{ id: "default", name: "Default" }]}
+                    selectedKey="default"
+                    onSelectionChange={() => {}}
+                  />
+                ),
                 groups: [
                   {
                     id: "operate",

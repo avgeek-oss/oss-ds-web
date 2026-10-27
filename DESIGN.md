@@ -16,9 +16,11 @@ Base primitives retain HeroUI's variants, colors and behavior. Shared CSS correc
 
 The shared ListBox tick reservation is a layout correction: picker popover padding must not overlap the selection indicator. It applies to all rows with an indicator; native colors, sizing and selection behavior remain in place.
 
+Tables own their frame and render directly in page content. Never put `Table`, `ResourceTable`, `HistoryTable` or another table pattern inside `Widget`. Use widgets for forms and metrics; place table counts in the page heading or the table's own footer.
+
 Chip labels stay on one line, including multiword labels and labels with icons. Their shared white-space and word-breaking rules prevent inherited table/content styles from splitting a label. Containers reserve the chip's intrinsic width; do not override this contract in an app.
 
-Secondary-section field labels use the compact muted hierarchy described in the layout guide. Select, ComboBox and Autocomplete popovers derive their outer radius from the field radius plus the 8px inset. These corrections belong to the shared stylesheet; consumers do not restyle individual labels or picker corners.
+Sidebar field labels use the compact muted hierarchy described in the layout guide. Workspace selection uses the same Select presentation as sidebar filters, with Workspace as its field label. Select, ComboBox and Autocomplete popovers derive their outer radius from the field radius plus the 8px inset. These corrections belong to the shared stylesheet; consumers do not restyle individual labels or picker corners.
 
 Selection displays and menu options remain 14px on mobile and desktop. Only actual text-entry controls retain the larger 16px mobile text, including search fields and editable ComboBox inputs. Preserve native control heights; use the typography contract in the forms guide.
 

@@ -45,7 +45,7 @@ function PageHeading({
               <span className="inline-flex min-w-0 items-center gap-2">
                 <HugeiconsIcon
                   aria-hidden="true"
-                  className="size-5 shrink-0"
+                  className="size-[19px] shrink-0"
                   icon={Task01Icon}
                   strokeWidth={1.5}
                 />

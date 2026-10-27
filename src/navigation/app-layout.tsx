@@ -15,6 +15,7 @@ import { RouteProvider, useRoutePathname } from "../hooks/route-context.js";
 import { cn } from "../lib/utils.js";
 import { Drawer } from "../overlays/drawer.js";
 import { bindSidebarSwipe } from "../lib/sidebar-swipe.js";
+import { useNavigationToggleHover } from "../hooks/use-navigation-toggle-hover.js";
 import styles from "./app-layout.module.css";
 import {
   MobileNavigationContext,
@@ -71,6 +72,7 @@ export function AppLayout({
   sidebarOpen?: boolean;
   toggleShortcut?: boolean;
 }) {
+  const closeHover = useNavigationToggleHover();
   const pathname = useRoutePathname();
   const inheritedNavigate = useAppNavigate();
   const previousPathname = useRef(pathname);
@@ -343,13 +345,14 @@ export function AppLayout({
                   >
                     {visible.sidebar}
                     <Drawer.CloseTrigger
+                      {...closeHover}
                       aria-label="Close navigation"
-                      className="end-3 top-2.5 size-11 bg-transparent hover:bg-transparent data-[hovered=true]:bg-transparent group-data-[secondary-navigation=true]/navigation:hidden"
+                      className="sidebar-navigation-toggle sidebar-navigation-close end-3 group-data-[secondary-navigation=true]/navigation:hidden"
                     >
                       <HugeiconsIcon
                         aria-hidden
                         icon={PanelLeftIcon}
-                        className="size-5"
+                        className="m-0 size-[17px]"
                       />
                     </Drawer.CloseTrigger>
                   </div>
@@ -359,20 +362,21 @@ export function AppLayout({
                   >
                     <div className="flex min-h-16 shrink-0 items-center justify-end border-b border-separator px-3">
                       <Drawer.CloseTrigger
+                        {...closeHover}
                         aria-label="Close navigation"
-                        className="static size-11 bg-transparent hover:bg-transparent data-[hovered=true]:bg-transparent"
+                        className="sidebar-navigation-toggle relative inset-auto"
                       >
                         <HugeiconsIcon
                           aria-hidden
                           icon={PanelLeftIcon}
-                          className="size-5"
+                          className="m-0 size-[17px]"
                         />
                       </Drawer.CloseTrigger>
                     </div>
                     <nav
                       aria-label="Page navigation"
                       ref={setMobileHost}
-                      className="grid min-h-0 flex-1 content-start gap-3 overflow-y-auto overscroll-contain px-3 py-5 pb-[max(1rem,env(safe-area-inset-bottom))]"
+                      className="sidebar-body sidebar-mobile-body grid min-h-0 flex-1 content-start overflow-y-auto overscroll-contain"
                     />
                   </div>
                 </Drawer.Dialog>
