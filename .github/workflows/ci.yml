@@ -10,9 +10,11 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: package-${{ github.ref }}
-  # A newer push to a pull request supersedes the running check. Pushes to
-  # main and release tags complete in order instead.
+  # Pull request runs are grouped by branch so a newer push supersedes the
+  # running check. Every other run is grouped by commit, so main pushes and
+  # tags are never cancelled or replaced while pending; the release checks
+  # need a result for each exact commit.
+  group: package-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   verify:
