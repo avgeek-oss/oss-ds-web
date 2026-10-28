@@ -17,6 +17,10 @@ concurrency:
   group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
+  # Each job's timeout-minutes is at least 2-3 times its slowest recent
+  # run, and at least 10 minutes for a job that installs dependencies (a
+  # cold pnpm store adds about a minute), so a hung step fails in minutes
+  # instead of the six-hour default.
   # The jobs up to the aggregate verify job run every part of `pnpm verify`
   # (package.json) in parallel. Keep the two in step when a part changes.
   # A release tag points at a commit that main already verified; the
@@ -24,6 +28,7 @@ jobs:
   checks:
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -46,6 +51,7 @@ jobs:
     # suites need Chromium and run on Node 26 only.
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -62,6 +68,7 @@ jobs:
   build:
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -87,6 +94,7 @@ jobs:
   package:
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -109,6 +117,7 @@ jobs:
   stories:
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     # Playwright's image carries Chromium and its system libraries, so no
     # job installs them from the apt mirror. Keep its tag at the locked
     # @playwright/test version; the check step below enforces it.
@@ -165,6 +174,7 @@ jobs:
     needs: build
     if: github.ref_type != 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     # Playwright's image carries Chromium and its system libraries, so no
     # job installs them from the apt mirror. Keep its tag at the locked
     # @playwright/test version; the check step below enforces it.
@@ -242,6 +252,7 @@ jobs:
     needs: [checks, node-24, build, package, stories, browser]
     if: always() && github.ref_type != 'tag'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Require every part to pass
         env:
@@ -284,6 +295,9 @@ jobs:
     if: always() && github.ref_type == 'tag' && startsWith(github.ref_name, 'v') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: verify
     runs-on: ubuntu-latest
+    # Generous: the registry check polls for up to two minutes, and a
+    # publish cut off halfway needs a manual retry.
+    timeout-minutes: 15
     permissions:
       contents: read
       actions: read
@@ -331,6 +345,7 @@ jobs:
     needs: publish
     if: ${{ needs.publish.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
     steps:
@@ -355,5 +370,11 @@ jobs:
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release edit "$GITHUB_REF_NAME" --title "$title" --notes-file "$RUNNER_TEMP/notes.md"
           else
-            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$title" --notes-file "$RUNNER_TEMP/notes.md"
+            # Cut release refuses an older version, but a tag pushed by hand
+            # can still be one: keep Latest on the newest release.
+            releases=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[] | select((.draft or .prerelease) | not) | .tag_name')
+            newest=$( (printf '%s\n' "$releases" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true; echo "$GITHUB_REF_NAME") | sort -V | tail -1)
+            latest=true
+            if [ "$newest" != "$GITHUB_REF_NAME" ]; then latest=false; fi
+            gh release create "$GITHUB_REF_NAME" --verify-tag --latest="$latest" --title "$title" --notes-file "$RUNNER_TEMP/notes.md"
           fi

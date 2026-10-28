@@ -27,6 +27,7 @@ concurrency:
 jobs:
   cut:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -42,6 +43,9 @@ jobs:
           else
             echo "**Release.** If every check passes, this run tags main and starts publishing." >> "$GITHUB_STEP_SUMMARY"
           fi
+      # The only checkout that keeps its token in the git config (no
+      # persist-credentials: false): "Create and push the tag" pushes with it.
+      # The job runs from main only, so the code it runs is main's.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -75,7 +79,7 @@ jobs:
             echo "::error::CHANGELOG.md has no '## ${VERSION} (YYYY-MM-DD)' section. Add and date it before releasing."
             exit 1
           fi
-      - name: Check the tag and version are new
+      - name: Check the tag and version are new and newest
         run: |
           if [ -n "$(git ls-remote --tags origin "refs/tags/$TAG")" ]; then
             echo "::error::Tag $TAG already exists."
@@ -93,6 +97,15 @@ jobs:
             printf '%s\n' "$output"
             exit 1
           fi
+          # The publish run creates a GitHub release for the tag, and GitHub
+          # marks a new release Latest. An older version must not take that
+          # over from a newer one, so only the newest version is released.
+          releases=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --jq '.[] | select((.draft or .prerelease) | not) | .tag_name')
+          latest=$(printf '%s\n' "$releases" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || true)
+          if [ -n "$latest" ] && [ "$(printf '%s\n' "$latest" "$TAG" | sort -V | tail -1)" != "$TAG" ]; then
+            echo "::error::$TAG is older than the latest release $latest. Cut release only releases a version newer than every published one. Nothing was tagged."
+            exit 1
+          fi
       - name: Check main verification passed for this commit
         run: |
           run=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&per_page=10" \
@@ -108,6 +121,28 @@ jobs:
             echo "::error::CI for $GITHUB_SHA is $status ($conclusion), not success: $url. Run this again once it passes."
             exit 1
           fi
+      # The publish run does not rebuild: it downloads storybook-and-package
+      # from the main run it finds with this same query, and artifacts expire
+      # after 30 days. Refuse here, before tagging, instead of failing there.
+      - name: Check the verified artifact is still available
+        run: |
+          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=push&status=success&per_page=5" \
+            --jq '[.workflow_runs[] | select(.head_branch == "main")] | sort_by(.created_at) | last | .id // empty')
+          if [ -z "$run" ]; then
+            echo "::error::No successful CI push run exists on main for $GITHUB_SHA, so there is no verified artifact to publish. Nothing was tagged."
+            exit 1
+          fi
+          expires=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts?name=storybook-and-package" \
+            --jq '[.artifacts[] | select(.expired | not)] | sort_by(.created_at) | last | .expires_at // empty')
+          if [ -z "$expires" ]; then
+            echo "::error::Run $run verified $GITHUB_SHA but its 'storybook-and-package' artifact has expired or was never uploaded. Re-run that run (gh run rerun $run) so it uploads it again, or merge a newer commit to main, then run this again. Nothing was tagged."
+            exit 1
+          fi
+          echo "Run $run has the 'storybook-and-package' artifact until $expires."
+          {
+            echo "ARTIFACT_RUN=$run"
+            echo "ARTIFACT_EXPIRES=$expires"
+          } >> "$GITHUB_ENV"
       - name: Plan
         run: |
           {
@@ -116,6 +151,7 @@ jobs:
             echo "- Package: \`$PACKAGE@$VERSION\`"
             echo "- Commit: \`$GITHUB_SHA\` on \`main\`"
             echo "- Tag: \`$TAG\`, annotated, message \"Release $TAG\""
+            echo "- Artifact: \`storybook-and-package\` from run $ARTIFACT_RUN, until $ARTIFACT_EXPIRES"
             echo "- Then: start the **CI** workflow on \`$TAG\`"
             if [ "${{ inputs.dry_run }}" = "true" ]; then
               echo
