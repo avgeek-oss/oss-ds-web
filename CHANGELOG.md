@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `ButtonLink` now applies a `style` render-prop function, which it previously dropped. Object styles are unchanged.
+- `AuthForm` submits `""` for a file input instead of `"[object File]"`. Text, email and password fields are unchanged.
+
 ## 1.4.0 (2026-10-28)
 
 - Align primary and secondary navigation icons at 17px; mute unselected icons, use the row text color when selected, and keep navigation labels at normal weight in both states. Share sidebar gutters, section spacing, no gaps between items in each category and 36px fine-input / 44px coarse-input rows.
