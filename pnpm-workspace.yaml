@@ -1,12 +1,8 @@
 allowBuilds:
   esbuild: true
-minimumReleaseAgeExclude:
-  - "@vitejs/plugin-react@6.1.2"
-  - "@vitest/browser-playwright@5.0.4"
-  - "@vitest/browser@5.0.4"
-  - "@vitest/mocker@5.0.4"
-  - "@vitest/pretty-format@5.0.4"
-  - "@vitest/spy@5.0.4"
-  - "@vitest/ui@5.0.4"
-  - "@vitest/utils@5.0.4"
-  - vitest@5.0.4
+# Transitive packages whose parents' ranges still allow an unpatched
+# release: undici through jsdom (tests only) and fast-uri through ajv.
+# Remove an entry once the lockfile resolves a patched version without it.
+overrides:
+  "undici@>=8.0.0 <8.12.2": 8.12.3
+  "fast-uri@>=3.0.0 <3.1.9": 3.1.9
