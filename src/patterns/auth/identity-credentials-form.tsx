@@ -86,6 +86,7 @@ export function IdentityCredentialsForm({
       }),
     ),
   });
+  // oxlint-disable-next-line react/incompatible-library -- the app does not use React Compiler; watch() keeps the identifier current
   const currentIdentifier = watch("identifier");
   const identifierField = register("identifier");
 

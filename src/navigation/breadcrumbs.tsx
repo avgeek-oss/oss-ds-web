@@ -174,6 +174,7 @@ export const BreadcrumbDropdown: Omit<
   Trigger: typeof BreadcrumbDropdownTrigger;
   Popover: typeof BreadcrumbDropdownPopover;
 } = {
+  // oxlint-disable-next-line typescript/no-misused-spread -- copies the compound component's static subcomponents, then replaces Trigger and Popover
   ...Dropdown,
   Trigger: BreadcrumbDropdownTrigger,
   Popover: BreadcrumbDropdownPopover,
@@ -182,6 +183,7 @@ export const BreadcrumbSelect: Omit<typeof Select, "Trigger" | "Popover"> & {
   Trigger: typeof BreadcrumbSelectTrigger;
   Popover: typeof BreadcrumbSelectPopover;
 } = {
+  // oxlint-disable-next-line typescript/no-misused-spread -- copies the compound component's static subcomponents, then replaces Trigger and Popover
   ...Select,
   Trigger: BreadcrumbSelectTrigger,
   Popover: BreadcrumbSelectPopover,

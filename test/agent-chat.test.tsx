@@ -46,6 +46,7 @@ async function click(element: Element) {
 
 async function type(field: HTMLTextAreaElement, value: string) {
   await act(async () => {
+    // oxlint-disable-next-line typescript/unbound-method -- the native value setter is called with .call(element, value)
     const setter = Object.getOwnPropertyDescriptor(
       HTMLTextAreaElement.prototype,
       "value",

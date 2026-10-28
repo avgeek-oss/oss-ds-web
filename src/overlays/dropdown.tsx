@@ -10,6 +10,7 @@ function DropdownRoot(props: ComponentProps<typeof HeroDropdown>) {
 }
 function DropdownPopover(props: ComponentProps<typeof HeroDropdown.Popover>) {
   const overlay = useRef<HTMLDivElement>(null);
+  // oxlint-disable-next-line react/refs -- reads props.isOpen, not a ref; React 19 passes ref as a prop, so the rule treats props as a ref
   const isSuspended = useSuspendedOverlayFocus(props.isOpen, overlay);
   return isSuspended ? null : (
     <HeroDropdown.Popover {...props} ref={mergeRefs(overlay, props.ref)} />

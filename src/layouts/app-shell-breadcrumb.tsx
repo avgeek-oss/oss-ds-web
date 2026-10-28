@@ -25,6 +25,7 @@ export function AppShellBreadcrumb({
     title,
   });
 
+  // oxlint-disable-next-line react/refs -- keeps the latest registration for the layout effect, which reads it after commit
   registrationRef.current = { items, title };
 
   useLayoutEffect(() => {

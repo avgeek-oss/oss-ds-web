@@ -27,12 +27,14 @@ export const describeServiceTool = ({
       return { label: "Read recent deployments" };
     case "restart_service":
       return {
-        label: `Restart ${String(fields.service ?? "service")}`,
+        label: `Restart ${typeof fields.service === "string" ? fields.service : "service"}`,
         detail:
           "Active connections drop while the service restarts. It usually takes under a minute.",
       };
     case "open_page":
-      return { label: `Open ${String(fields.path ?? "page")}` };
+      return {
+        label: `Open ${typeof fields.path === "string" ? fields.path : "page"}`,
+      };
     default:
       return undefined;
   }

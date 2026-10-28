@@ -90,6 +90,7 @@ async function fill(name: string, value: string) {
   );
   assert.ok(input, `Missing input: ${name}`);
   await act(async () => {
+    // oxlint-disable-next-line typescript/unbound-method -- the native value setter is called with .call(element, value)
     const setter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       "value",
@@ -969,6 +970,7 @@ test("name settings lock simultaneous submissions and retain the draft for retry
     const input = document.querySelector("input");
     assert.ok(input);
     await act(async () => {
+      // oxlint-disable-next-line typescript/unbound-method -- the native value setter is called with .call(element, value)
       const setter = Object.getOwnPropertyDescriptor(
         HTMLInputElement.prototype,
         "value",
@@ -1524,7 +1526,7 @@ for (const error of [
     code: "INVALID_EMAIL_OR_PASSWORD",
   }),
 ]) {
-  test(`sign-in ignores verification message text with code ${"code" in error ? error.code : "absent"}`, async () => {
+  test(`sign-in ignores verification message text with code ${"code" in error ? String(error.code) : "absent"}`, async () => {
     const view = await mount(
       <SignIn
         brand="Example"

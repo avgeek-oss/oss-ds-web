@@ -474,7 +474,7 @@ await write(
           },
         ],
       },
-      files: published.sort(),
+      files: published.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)),
       uploads: { Logos: "uploads/Logos", Icons: "uploads/Icons" },
     },
     null,

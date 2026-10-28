@@ -95,6 +95,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     )
       ? document.documentElement.dataset.themeMode
       : readStoredThemeMode();
+    // oxlint-disable-next-line react/set-state-in-effect -- reads the theme from the document after hydration, which render cannot do on the server
     commitTheme(initialThemeMode, {
       disableTransitions: false,
       persist: false,

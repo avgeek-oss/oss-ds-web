@@ -89,10 +89,10 @@ export function AuthForm({
             Object.fromEntries(
               fields
                 .filter((field) => !field.disabled)
-                .map((field) => [
-                  field.name,
-                  String(data.get(field.name) ?? ""),
-                ]),
+                .map((field) => {
+                  const value = data.get(field.name);
+                  return [field.name, typeof value === "string" ? value : ""];
+                }),
             ),
           );
         } catch (cause) {
