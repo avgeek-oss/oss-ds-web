@@ -4,6 +4,7 @@
 
 - `ButtonLink` now applies a `style` render-prop function, which it previously dropped. Object styles are unchanged.
 - `AuthForm` submits `""` for a file input instead of `"[object File]"`. Text, email and password fields are unchanged.
+- Require `zod` 4.6.6 or later and, when the Next.js adapter is used, `next` 16.4.1 or later. Earlier releases of both have published security advisories.
 
 ## 1.4.0 (2026-10-28)
 

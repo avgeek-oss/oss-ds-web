@@ -39,6 +39,9 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      # CI only, not part of `pnpm verify`: it reads the live advisory
+      # database, so a new advisory fails the next run on any branch.
+      - run: pnpm audit --audit-level=moderate
   node-24:
     # Development and the other jobs run on Node 26 (.nvmrc); the package
     # supports Node 24 and later (engines.node), so its build and unit
