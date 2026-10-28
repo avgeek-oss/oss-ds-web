@@ -398,6 +398,7 @@ function FilterValueSelect<Field extends string>({
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     let current = true;
+    // oxlint-disable-next-line react/set-state-in-effect -- resets the options before the load this effect starts
     setOptions([]);
     setError(false);
     setLoading(true);

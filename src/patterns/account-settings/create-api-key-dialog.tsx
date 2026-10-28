@@ -108,9 +108,8 @@ function CreateContent({
                 onSubmit={async (event) => {
                   event.preventDefault();
                   if (!canCreate) return;
-                  const name = String(
-                    new FormData(event.currentTarget).get("name") ?? "",
-                  ).trim();
+                  const value = new FormData(event.currentTarget).get("name");
+                  const name = (typeof value === "string" ? value : "").trim();
                   if (!name) {
                     toast.danger("Enter a name for this API key.");
                     nameRef.current?.focus();

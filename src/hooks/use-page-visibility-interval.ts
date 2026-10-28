@@ -16,6 +16,7 @@ export function usePageVisibilityInterval(
   }: PageVisibilityIntervalOptions = {},
 ) {
   const callbackRef = React.useRef(callback);
+  // oxlint-disable-next-line react/refs -- keeps the latest callback for the interval without restarting it; only the effect's timers read it
   callbackRef.current = callback;
 
   React.useEffect(() => {

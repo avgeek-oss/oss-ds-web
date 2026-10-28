@@ -493,9 +493,9 @@ export function ApplicationFooter({
   config: FooterConfig;
   policy?: ApplicationPolicy;
 }) {
-  const copyright = (
-    config.copyright ?? `© {year} ${config.brand.title}`
-  ).replace("{year}", String(new Date().getFullYear()));
+  const copyright = (config.copyright ?? `© {year} ${config.brand.title}`)
+    // oxlint-disable-next-line react/purity -- the copyright year is read at render; it only changes once a year
+    .replace("{year}", String(new Date().getFullYear()));
   return (
     <footer className="border-t border-separator px-6 py-10">
       <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-[1fr_auto]">

@@ -307,6 +307,7 @@ function Transcript({
 
   useEffect(() => {
     // A new round of approvals starts without earlier local decisions.
+    // oxlint-disable-next-line react/set-state-in-effect -- a new round of approvals starts without earlier local decisions
     if (pending.length === 0) setDecisions({});
   }, [pending.length]);
 

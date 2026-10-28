@@ -16,6 +16,7 @@ const contentTypes = {
 
 export const test = base.extend({
   fixtureOrigin: [
+    // oxlint-disable-next-line no-empty-pattern -- Playwright fixtures must destructure their first argument, even when they use no other fixture
     async ({}, use) => {
       const server = createServer(async (request, response) => {
         try {

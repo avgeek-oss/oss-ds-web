@@ -188,6 +188,7 @@ function TooltipContent({
       )}
     >
       <div className="font-medium">
+        {/* oxlint-disable-next-line typescript/no-base-to-string -- Recharts passes the category value (string, number or Date); String() is the intended conversion */}
         {labelFormatter ? labelFormatter(label) : String(label ?? "")}
       </div>
       {payload.map((item) => (

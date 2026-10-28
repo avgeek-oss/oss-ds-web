@@ -16,6 +16,7 @@ function SelectPopover(props: ComponentProps<typeof HeroSelect.Popover>) {
   const state = useContext(SelectStateContext);
   const overlay = useRef<HTMLDivElement>(null);
   const isSuspended = useSuspendedOverlayFocus(
+    // oxlint-disable-next-line react/refs -- reads props.isOpen, not a ref; React 19 passes ref as a prop, so the rule treats props as a ref
     props.isOpen ?? state?.isOpen,
     overlay,
   );

@@ -143,6 +143,7 @@ export function AppLayout({
     const exited = wasDrawerMounted.current && !drawerMounted;
     wasDrawerMounted.current = drawerMounted;
     if (isDesktop || (sidebarOpen && drawerMounted)) {
+      // oxlint-disable-next-line react/set-state-in-effect -- focus restoration follows the drawer's DOM mount state, which is only known after layout
       setRestoringFocus(false);
       return;
     }

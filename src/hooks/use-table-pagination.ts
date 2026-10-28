@@ -62,6 +62,7 @@ function useTablePagination(
 
   useEffect(() => {
     if (totalPages !== null && page > totalPages) {
+      // oxlint-disable-next-line react/set-state-in-effect -- clamps the page after the total shrinks; deriving it in render would change when onPageChange sees it
       setPageState(totalPages);
     }
   }, [page, totalPages]);

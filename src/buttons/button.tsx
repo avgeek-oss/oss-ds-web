@@ -37,7 +37,11 @@ export function ButtonLink({
         }),
         "inline-flex items-center gap-2",
       )}
-      style={{ color: "var(--button-fg)", ...style }}
+      style={
+        typeof style === "function"
+          ? (values) => ({ color: "var(--button-fg)", ...style(values) })
+          : { color: "var(--button-fg)", ...style }
+      }
       {...props}
     />
   );
