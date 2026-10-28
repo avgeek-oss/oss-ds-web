@@ -193,6 +193,9 @@ try {
         strict: true,
         skipLibCheck: true,
         noEmit: true,
+        // As in a Vite app: vite/client declares CSS imports, which
+        // TypeScript 6 and later check by default.
+        types: ["vite/client"],
       },
       include: ["main.tsx"],
     });

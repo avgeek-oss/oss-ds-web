@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
-import ts from "typescript";
+import ts from "@typescript/typescript6";
 import { createExampleSourceTransform } from "../.storybook/example-source";
 
 test("catalogue source includes real composition and sample callbacks, rather than a private preview import", () => {
