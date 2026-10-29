@@ -37,6 +37,14 @@ import { CodeBlock } from "../src/typography/code-block.js";
 import { ResourceTable } from "../src/patterns/resource-table.js";
 import { FileUpload } from "../src/patterns/file-upload.js";
 import { QueryLoading } from "../src/patterns/feedback/query-state.js";
+import { Accordion } from "../src/data-display/accordion.js";
+import { ProgressChecklistItem } from "../src/patterns/operations/progress-checklist-item.js";
+import { ChoiceField } from "../src/patterns/choice-field.js";
+import { HistorySearch } from "../src/patterns/history/history-search.js";
+import { Dialog } from "../src/overlays/dialog.js";
+import { OverlaySuspensionScope } from "../src/overlays/overlay-suspension.js";
+import { DatePickerField } from "../src/patterns/date-picker-field.js";
+import { RelativeTime } from "../src/data-display/relative-time.js";
 
 let dangerMessages: ReactNode[] = [];
 beforeEach(() => {
@@ -1956,6 +1964,259 @@ test("initially disabled file upload requires an explicit action after enabling"
     assert.deepEqual(received, [file]);
     assert.equal(dangerMessages.length, 0);
     assert.doesNotMatch(view.container.textContent ?? "", /dropped.png/);
+  } finally {
+    await view.unmount();
+  }
+});
+
+function checklist(
+  status: "running" | "failed" | "succeeded",
+  props: {
+    defaultExpanded?: boolean;
+    defaultExpandedKeys?: readonly string[];
+  } = {},
+) {
+  return (
+    <Accordion
+      allowsMultipleExpanded
+      defaultExpandedKeys={props.defaultExpandedKeys}
+    >
+      <ProgressChecklistItem
+        id="build"
+        title="Build application"
+        description="Build"
+        status={status}
+        defaultExpanded={props.defaultExpanded}
+      >
+        <p>Build output</p>
+      </ProgressChecklistItem>
+    </Accordion>
+  );
+}
+function checklistTrigger() {
+  const trigger = [...document.querySelectorAll("button")].find((item) =>
+    item.textContent?.includes("Build application"),
+  );
+  assert.ok(trigger);
+  return trigger;
+}
+
+test("checklist items in an app Accordion expand when they fail until the user toggles them", async () => {
+  const view = await mount(<StrictMode>{checklist("running")}</StrictMode>);
+  try {
+    assert.equal(checklistTrigger().getAttribute("aria-expanded"), "false");
+    await view.render(<StrictMode>{checklist("failed")}</StrictMode>);
+    assert.equal(checklistTrigger().getAttribute("aria-expanded"), "true");
+    await click(checklistTrigger());
+    assert.equal(checklistTrigger().getAttribute("aria-expanded"), "false");
+    await view.render(<StrictMode>{checklist("running")}</StrictMode>);
+    await view.render(<StrictMode>{checklist("failed")}</StrictMode>);
+    assert.equal(checklistTrigger().getAttribute("aria-expanded"), "false");
+  } finally {
+    await view.unmount();
+  }
+});
+
+test("checklist defaultExpanded opts in or out, and app-expanded items stay open", async () => {
+  for (const [status, props, expanded] of [
+    ["failed", { defaultExpanded: false }, "false"],
+    ["succeeded", { defaultExpanded: true }, "true"],
+    ["succeeded", { defaultExpandedKeys: ["build"] }, "true"],
+  ] as const) {
+    const view = await mount(checklist(status, props));
+    try {
+      assert.equal(checklistTrigger().getAttribute("aria-expanded"), expanded);
+    } finally {
+      await view.unmount();
+    }
+  }
+});
+
+test("choice field keeps hidden labels and descriptions accessible and selects by full option text", async () => {
+  const changes: string[] = [];
+  const view = await mount(
+    <ChoiceField
+      label="Board"
+      hideLabel
+      description="Tasks move with their comments."
+      value="roadmap"
+      onChange={(value) => changes.push(value)}
+      options={[
+        { id: "roadmap", label: "Roadmap", endContent: "42" },
+        { id: "", label: "Unassigned", muted: true },
+        {
+          id: "archive",
+          label: "Archive",
+          description: "Read-only",
+          endContent: "318",
+        },
+      ]}
+    />,
+  );
+  try {
+    const label = view.container.querySelector('[data-slot="label"]');
+    assert.equal(label?.textContent, "Board");
+    assert.match(label.className, /\bsr-only\b/);
+    const trigger = view.container.querySelector("button");
+    assert.ok(trigger);
+    const descriptionId = [
+      ...view.container.querySelectorAll('[slot="description"]'),
+    ].find(
+      (item) => item.textContent === "Tasks move with their comments.",
+    )?.id;
+    assert.ok(descriptionId);
+    assert.match(
+      trigger.getAttribute("aria-describedby") ?? "",
+      new RegExp(descriptionId),
+    );
+    assert.match(trigger.textContent ?? "", /Roadmap\s*42/);
+    await chooseKeyOption("Archive Read-only 318");
+    await chooseKeyOption("Unassigned");
+    assert.deepEqual(changes, ["archive", ""]);
+  } finally {
+    await view.unmount();
+  }
+});
+
+test("history search shows an applied value and replaces the draft when it changes", async () => {
+  const searches: string[] = [];
+  const onSearch = (value: string) => searches.push(value);
+  const view = await mount(
+    <HistorySearch label="Search" value="invitation" onSearch={onSearch} />,
+  );
+  try {
+    const input = view.container.querySelector("input");
+    assert.ok(input);
+    assert.equal(input.value, "invitation");
+    await act(async () => {
+      // oxlint-disable-next-line typescript/unbound-method -- the native value setter is called with .call(element, value)
+      const setter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      assert.ok(setter);
+      setter.call(input, "draft");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    assert.equal(input.value, "draft");
+    await view.render(
+      <HistorySearch label="Search" value="" onSearch={onSearch} />,
+    );
+    assert.equal(input.value, "");
+    assert.deepEqual(searches, []);
+  } finally {
+    await view.unmount();
+  }
+});
+
+test("dialog closes through onClose, honors disabled dismissal and ignores dismissal while suspended", async () => {
+  let closes = 0;
+  const dialog = (suspended: boolean, isDismissDisabled = false) => (
+    <OverlaySuspensionScope isSuspended={suspended}>
+      <Dialog
+        open
+        onClose={() => closes++}
+        title={<span>Rename board</span>}
+        isDismissDisabled={isDismissDisabled}
+        footer={<button type="button">Save</button>}
+      >
+        <p>Body</p>
+      </Dialog>
+    </OverlaySuspensionScope>
+  );
+  const view = await mount(dialog(true));
+  try {
+    assert.equal(document.querySelector('[role="dialog"]'), null);
+    await view.render(dialog(false, true));
+    assert.match(
+      document.querySelector('[role="dialog"]')?.textContent ?? "",
+      /Rename board.*Body.*Save/,
+    );
+    const close = document.querySelector<HTMLButtonElement>(
+      'button[aria-label="Close"]',
+    );
+    assert.ok(close);
+    assert.equal(close.disabled, true);
+    await view.render(dialog(false));
+    await click(close);
+    assert.equal(closes, 1);
+  } finally {
+    await view.unmount();
+  }
+});
+
+test("date picker field clears to null, returns focus to the calendar button and hides clearing when disabled", async () => {
+  const values: (string | null)[] = [];
+  const field = (isDisabled: boolean) => (
+    <DatePickerField
+      label="Due date"
+      value="2026-10-16"
+      isDisabled={isDisabled}
+      onChange={(value) => values.push(value)}
+    />
+  );
+  const view = await mount(field(false));
+  try {
+    const clear = view.container.querySelector<HTMLButtonElement>(
+      'button[aria-label="Clear due date"]',
+    );
+    assert.ok(clear);
+    await click(clear);
+    assert.deepEqual(values, [null]);
+    assert.equal(
+      document.activeElement?.getAttribute("aria-label"),
+      "Choose due date",
+    );
+    await view.render(field(true));
+    assert.equal(
+      view.container.querySelector('button[aria-label="Clear due date"]'),
+      null,
+    );
+  } finally {
+    await view.unmount();
+  }
+});
+
+test("relative time renders relative text once mounted and a dash for missing values", async () => {
+  const formatAbsolute = (value: Date) => value.toISOString().slice(0, 10);
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60_000).toISOString();
+  const soon = new Date(Date.now() + 20_000).toISOString();
+  const view = await mount(
+    <>
+      <RelativeTime
+        value={fiveMinutesAgo}
+        label="Last synced"
+        display="relative"
+        locale="en"
+        formatAbsolute={formatAbsolute}
+        timeZone="UTC"
+      />
+      <RelativeTime
+        value={soon}
+        label="Created"
+        locale="en"
+        formatAbsolute={formatAbsolute}
+        timeZone="UTC"
+      />
+      <RelativeTime
+        value="not a date"
+        label="Last used"
+        formatAbsolute={formatAbsolute}
+        timeZone="UTC"
+      />
+    </>,
+  );
+  try {
+    const times = view.container.querySelectorAll("time");
+    assert.equal(times[0]?.textContent, "Last synced 5 minutes ago");
+    assert.equal(times[0]?.getAttribute("datetime"), fiveMinutesAgo);
+    assert.match(
+      times[1]?.getAttribute("aria-label") ?? "",
+      /^Created: \d{4}-\d{2}-\d{2} UTC, now$/,
+    );
+    assert.ok(
+      view.container.querySelector('[aria-label="Last used unavailable"]'),
+    );
   } finally {
     await view.unmount();
   }

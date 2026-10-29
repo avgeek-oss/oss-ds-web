@@ -4,5 +4,47 @@ Copyright Avgeek, Inc.
 UI primitives, layouts and recipes adapted from Towbar,
 https://github.com/avgeek-oss/towbar, under the Apache License 2.0.
 
+TextField, Dialog, DatePickerField, the ChoiceField search and RelativeTime
+adapted from Mill, https://github.com/avgeek-oss/mill, under the Apache
+License 2.0.
+
 Built with the open-source HeroUI React components and styles.
 Third-party dependencies retain their own licenses.
+
+McpClientLogo brand marks
+-------------------------
+
+The OpenAI (Codex), Cursor and Anthropic (Claude) SVG paths in
+src/utilities/mcp-client-presentation.tsx are from LobeHub Icons,
+https://github.com/lobehub/lobe-icons, under the MIT License below.
+
+The VS Code logo silhouette in the same file is adapted from Microsoft's
+VS Code logo asset,
+https://github.com/MicrosoftDocs/visualstudio-docs/blob/main/docs/media/vs-code-logo.svg,
+reduced to a single-color shape for a client selector. The source is provided
+under the Creative Commons Attribution 4.0 International License,
+https://creativecommons.org/licenses/by/4.0/.
+
+Brand names and logos belong to their respective owners.
+
+MIT License
+
+Copyright (c) 2023 LobeHub
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

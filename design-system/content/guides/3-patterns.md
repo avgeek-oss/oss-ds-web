@@ -19,7 +19,7 @@ Apps fetch, authorize and persist; patterns own layout, copy and states.
 - `PasskeySettings`: omit `onRename` or `onReplaceRecoveryCodes` when unsupported.
 - `ApiKeysSettings` lists keys with awaited revocation; never store raw tokens.
 - `CreateApiKeyDialog` requires explicit Permissions and Expires after choices; it never defaults them.
-- Keep MCP Connections on its own page below API Keys; use `McpGuideSettings` for client setup.
+- Keep MCP Connections on its own page below API Keys; use `McpGuideSettings` for client setup with `mcpClientConfigurations({ serverName, url })`.
 
 ## Team settings
 
@@ -35,7 +35,7 @@ Apps fetch, authorize and persist; patterns own layout, copy and states.
 
 - Use `HistoryTable` for paginated history with loading, error and filter states.
 - Use `ResourceTable` for a plain record list.
-- Compose `HistorySearch` and `HistoryFilter` above `HistoryTable`.
+- Compose `HistorySearch` and `HistoryFilter` above `HistoryTable`; pass the applied search, such as one from the URL, as `HistorySearch` `value`.
 - `FilterDialog` keeps a draft until Apply; Cancel keeps committed filters. The app defines fields and operators.
 - Use `ExpandableAttributeList` when only some rows have details; `Attributes` when none do.
 

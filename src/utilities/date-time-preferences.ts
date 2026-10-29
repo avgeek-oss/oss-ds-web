@@ -26,3 +26,39 @@ export const defaultDateTimePreferences = {
   timeFormat: "24-hour",
   timeZone: "UTC",
 } as const satisfies StandardDateTimePreferences;
+
+/**
+ * Whether the runtime accepts `value` as an IANA time zone. Offsets such as
+ * `+05:30` are rejected, so stored preferences always name a zone.
+ */
+export function isTimeZone(value: string) {
+  if (!value || value.length > 100 || /^[+-]/.test(value)) return false;
+  try {
+    new Intl.DateTimeFormat("en-GB", { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The runtime's IANA time zones, UTC first and then alphabetical. */
+export function availableTimeZones() {
+  // Some ICU versions list only an older name for a zone while accepting the
+  // current one, so the current names are added and then deduplicated.
+  return [
+    ...new Set(
+      [
+        "UTC",
+        ...Intl.supportedValuesOf("timeZone"),
+        "Asia/Kolkata",
+        "Asia/Kathmandu",
+        "Asia/Yangon",
+        "Europe/Kyiv",
+        "America/Nuuk",
+        "Pacific/Kanton",
+      ].filter(isTimeZone),
+    ),
+  ].sort((left, right) =>
+    left === "UTC" ? -1 : right === "UTC" ? 1 : left.localeCompare(right),
+  );
+}

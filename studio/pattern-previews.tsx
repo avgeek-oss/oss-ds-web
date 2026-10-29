@@ -452,16 +452,28 @@ export function HistoryPreview() {
     </Preview>
   );
 }
-export function HistorySearchPreview() {
-  const [value, setValue] = useState("");
+export function HistorySearchPreview({
+  initialSearch = "",
+}: {
+  initialSearch?: string;
+}) {
+  const [value, setValue] = useState(initialSearch);
   return (
     <Preview>
       <HistorySearch
         label="Search events"
         placeholder="Search by event or actor"
+        value={value}
         onSearch={setValue}
       />
       <p role="status">Search: {value || "All events"}</p>
+      <Button
+        variant="secondary"
+        className="w-fit"
+        onPress={() => setValue("")}
+      >
+        Show all events
+      </Button>
     </Preview>
   );
 }
@@ -723,7 +735,7 @@ export function OperationProgressPreview() {
 export function ProgressChecklistItemPreview() {
   return (
     <Preview>
-      <Accordion allowsMultipleExpanded defaultExpandedKeys={["build"]}>
+      <Accordion allowsMultipleExpanded>
         <ProgressChecklistItem
           id="build"
           title="Build application"

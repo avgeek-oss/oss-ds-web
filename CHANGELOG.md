@@ -6,6 +6,16 @@
 - `ButtonLink` now applies a `style` render-prop function, which it previously dropped. Object styles are unchanged.
 - `AuthForm` submits `""` for a file input instead of `"[object File]"`. Text, email and password fields are unchanged.
 - Require `zod` 4.6.6 or later and, when the Next.js adapter is used, `next` 16.4.1 or later. Earlier releases of both have published security advisories.
+- `ProgressChecklistItem` takes `defaultExpanded`, and a failed item now expands on its own, including one that fails after it rendered, until the user toggles it. This also works inside an app's own `Accordion`. `OperationProgress` honors `defaultExpanded`.
+- `HistoryFilter`: the search field uses 16px text on small screens so iOS does not zoom, and a bare `<img>` icon in the selected value is sized to 16px like SVG icons. `HistorySearch` takes the applied search as `value`, for example from the URL.
+- `ChoiceField` adds `search`, `hideLabel`, a field `description`, `fullWidth`, `className`, and per-option `endContent` and `muted`. Options are announced and searched by their label, description and end content.
+- Add `McpClientLogo` and `mcpClientConfigurations({ serverName, url })` for the Codex, Claude Code, Cursor, VS Code and Other clients ("Connection details") entries of `McpGuideSettings`, on the root and `utilities/mcp-client-presentation`. NOTICE now carries the LobeHub Icons (MIT) and VS Code logo (CC BY 4.0) attributions.
+- Add `RelativeTime` (`data-display/relative-time`) with `stacked`, `relative`, `compact` and `absolute` displays, relative text from `Intl.RelativeTimeFormat`, an app-supplied `formatAbsolute` and `timeZone`, and one shared clock refreshed while the page is visible. `formatRelativeTime` and `useCurrentTime` are exported with it.
+- Add `isTimeZone` and `availableTimeZones` to `utilities/date-time-preferences`. The subpath stays free of React, so API packages can import it.
+- Add `TextField` (`patterns/text-field`): a label, optional description linked through `aria-describedby`, and a native input or textarea.
+- Add `Dialog` (`overlays/dialog`): `open`, `onClose`, a `ReactNode` `title`, `footer`, `wide` and `isDismissDisabled` over `Modal`. Dismissal is ignored while an `OverlaySuspensionScope` suspends it.
+- Add `DatePickerField` (`patterns/date-picker-field`): a labelled calendar date as `YYYY-MM-DD` that can be cleared, returning focus to the calendar button.
+- Export `RouterProvider`, `Header` and `PortalProvider` from the package root.
 
 ## 1.4.0 (2026-10-28)
 

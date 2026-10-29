@@ -19,16 +19,16 @@ Primitives keep HeroUI's native variants. Patterns are complete, reviewed surfac
 - `Button`: actions; `secondary` for cancel, `danger` or `danger-soft` for destructive.
 - `ToggleButton`: on/off or segmented choices.
 - `AsyncActionButton`: awaited actions with locking and failure toast.
-- `Input`, `Textarea`, `PasswordInput`, `InputGroup`: text entry.
+- `Input`, `Textarea`, `PasswordInput`, `InputGroup`: text entry; `TextField` for a labelled input or textarea with help text.
 - `Field`, `Label`, `Description`: field structure and help text.
 - `Checkbox`, `Switch`: boolean settings.
-- `Select`: choosing from a list; `ChoiceField` for described role or permission choices.
+- `Select`: choosing from a list; `ChoiceField` for described role or permission choices and searchable app pickers such as assignees.
 - `ComboBox`, `Autocomplete`: searchable choices.
 - `FileUpload`: one image or PDF by picker or drag and drop.
 
 ## Dates and time
 
-- `DatePicker`: calendar entry; `DateField` for segmented entry alone.
+- `DatePicker`: calendar entry; `DateField` for segmented entry alone; `DatePickerField` for a labelled, clearable `YYYY-MM-DD` date.
 - `DateRangePicker`, `RangeCalendar`: date ranges.
 - `TimeField`: times; `DateTimeRangePicker` for ranges with times.
 - `Calendar`: inline month view.
@@ -42,6 +42,7 @@ Primitives keep HeroUI's native variants. Patterns are complete, reviewed surfac
 - `ListView`, `ListBox`: simple lists and selectable options.
 - `Accordion`, `Disclosure`: collapsible sections.
 - `Chip`: short metadata; `StatusIndicator` for domain status.
+- `RelativeTime`: timestamps relative to now, with the absolute time and time zone.
 - `Avatar`, `UserAvatar`: people, with initials fallback.
 - `EmptyState`: successful requests with no records.
 - `LineChart`: time series inside a `Widget`.
@@ -52,7 +53,7 @@ Primitives keep HeroUI's native variants. Patterns are complete, reviewed surfac
 - `Alert`: inline status messages.
 - `Toast`: mutation results, one bottom-center provider per app.
 - `Spinner`, `ProgressCircle`, `Skeleton`, `LoadingSkeleton`: loading states.
-- `Modal`, `Drawer`: focused tasks; `AlertDialog` and `ActionConfirmation` for consequences.
+- `Modal`, `Drawer`: focused tasks; `Dialog` for a titled modal with a footer; `AlertDialog` and `ActionConfirmation` for consequences.
 - `Popover`, `Dropdown`, `Tooltip`, `HeadingHelp`: anchored content and menus.
 - `ErrorPage`, `QueryError`, `BackendUnavailable`: route, query and outage failures.
 

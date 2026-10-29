@@ -18,6 +18,9 @@ export {
 } from "./navigation/breadcrumbs.js";
 export { Page, PageSection } from "./layouts/page.js";
 export { RouteProvider } from "./hooks/route-context.js";
+export { RouterProvider } from "react-aria-components";
+export { Header } from "./collections/list-box.js";
+export { UNSAFE_PortalProvider as PortalProvider } from "react-aria";
 export { Providers, useTheme } from "./utilities/providers.js";
 export {
   OverlaySuspensionScope,
@@ -332,6 +335,8 @@ export {
   dateFormatOptions,
   timeFormatOptions,
   defaultDateTimePreferences,
+  isTimeZone,
+  availableTimeZones,
   type DateFormatId,
   type TimeFormatId,
   type StandardDateTimePreferences,
@@ -370,3 +375,23 @@ export {
   DateTimeRangePicker,
   type DateTimeRangePickerProps,
 } from "./patterns/date-time-range-picker.js";
+
+export {
+  RelativeTime,
+  formatRelativeTime,
+  useCurrentTime,
+  type RelativeTimeProps,
+  type RelativeTimeDisplay,
+} from "./data-display/relative-time.js";
+
+export {
+  McpClientLogo,
+  mcpClientConfigurations,
+  type McpClientLogoProps,
+  type McpClientConfigurationsOptions,
+} from "./utilities/mcp-client-presentation.js";
+
+export {
+  DatePickerField,
+  type DatePickerFieldProps,
+} from "./patterns/date-picker-field.js";

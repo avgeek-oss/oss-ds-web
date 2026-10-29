@@ -1052,6 +1052,29 @@ test("time-zone results scroll independently and focus uses a background", async
   await expect(list).toHaveCount(0);
 });
 
+test("choice field search filters options, avoids iOS input zoom and selects the match", async ({
+  page,
+  fixtureUrl,
+  width,
+}) => {
+  await page.goto(
+    fixtureUrl("stories/Patterns/ChoiceField.stories.tsx", "Search"),
+  );
+  const trigger = page.getByRole("button", { name: /Assignee/ });
+  await expect(trigger).toContainText("Unassigned");
+  await trigger.click();
+  const search = page.getByRole("searchbox", { name: "Search assignee" });
+  await expect(search).toBeVisible();
+  // iOS zooms into inputs with text under 16px.
+  await expect(search).toHaveCSS("font-size", width < 640 ? "16px" : "14px");
+  await search.fill("pri");
+  const list = page.getByRole("listbox");
+  await expect(list.getByRole("option")).toHaveCount(1);
+  await list.getByRole("option", { name: "Priya Raman" }).click();
+  await expect(list).toHaveCount(0);
+  await expect(trigger).toContainText("Priya Raman");
+});
+
 test("installation setup requires a secret and retains account drafts after a failed claim", async ({
   page,
   fixtureUrl,
