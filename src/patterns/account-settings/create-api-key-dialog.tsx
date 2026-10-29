@@ -1,66 +1,106 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { Modal } from "../../overlays/modal.js";
 import { Button } from "../../buttons/button.js";
 import { Field } from "../../forms/field.js";
 import { Input } from "../../forms/input.js";
 import { Label } from "../../forms/label.js";
-import { CodeBlock } from "../../typography/code-block.js";
 import { toast } from "../../overlays/toast.js";
 import { ChoiceField, type ChoiceOption } from "../choice-field.js";
 import { useAsyncAction } from "../use-async-action.js";
+import {
+  teamRoleOptions,
+  type TeamRole,
+} from "../team-settings/team-role-options.js";
+import { ApiKeySecret } from "./api-key-secret.js";
 
-export const apiKeyPermissionOptions = [
-  { id: "read", label: "Read-only" },
-  { id: "edit", label: "Edit" },
-  { id: "admin", label: "Administrative permissions" },
-] as const satisfies readonly ChoiceOption[];
+/** Expiry choices; ids are whole days, or `never` for no expiry. */
 export const apiKeyExpiryOptions = [
   { id: "30", label: "30 days" },
   { id: "90", label: "90 days" },
   { id: "365", label: "1 year" },
   { id: "never", label: "Never" },
 ] as const satisfies readonly ChoiceOption[];
+
+/** The workspace choice that issues a key for every workspace. */
+const allWorkspaces = "*";
+
+/**
+ * What the dialog submits. The same shape as `CreateApiKeyInput` from
+ * `@avgeek-oss/auth-client`.
+ */
 export type CreateApiKeyValues = {
   name: string;
-  permission: string;
-  expiry: string;
+  ceiling: TeamRole;
+  workspace: string | null;
+  /** Lifetime in seconds, or `null` for no expiry. */
+  expiresInSeconds: number | null;
 };
-export type CreatedApiKey = { token: string | null };
+/** A new key's secret, shown once. */
+export type IssuedApiKeySecret = { key: string };
 export type CreateApiKeyDialogProps = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  permissionOptions?: readonly ChoiceOption[];
+  /**
+   * The roles the person may give a key, which never exceed their own.
+   * Others are not offered.
+   */
+  ceilings: readonly TeamRole[];
+  /** Ids are whole days or `never`; omit `never` where keys must expire. */
   expiryOptions?: readonly ChoiceOption[];
-  onCreate: (values: CreateApiKeyValues) => Promise<CreatedApiKey>;
+  /**
+   * Workspaces a key may be limited to, for apps that issue keys per
+   * workspace. Adds a Workspace field with an "All workspaces" choice.
+   */
+  workspaces?: readonly ChoiceOption[];
+  /**
+   * Creates the key and resolves to its secret. Resolve to `undefined` when
+   * the app took over instead, such as by starting step-up; the dialog
+   * then closes.
+   */
+  onCreate: (
+    values: CreateApiKeyValues,
+  ) => Promise<IssuedApiKeySecret | undefined>;
   children?: ReactNode;
 };
 type CreateContentProps = Omit<CreateApiKeyDialogProps, "isOpen">;
 export function CreateApiKeyDialog(props: CreateApiKeyDialogProps) {
   return props.isOpen ? <CreateContent {...props} /> : null;
 }
+
+export function expiryInSeconds(id: string): number | null {
+  return id === "never" ? null : Number(id) * 86_400;
+}
+
 function CreateContent({
   onOpenChange,
-  permissionOptions = apiKeyPermissionOptions,
+  ceilings,
   expiryOptions = apiKeyExpiryOptions,
+  workspaces,
   onCreate,
   children,
 }: CreateContentProps) {
   const nameId = useId();
-  const [permission, setPermission] = useState("");
+  const roleOptions = teamRoleOptions.filter((role) =>
+    ceilings.includes(role.id),
+  );
+  const [ceiling, setCeiling] = useState<string>("");
   const [expiry, setExpiry] = useState("");
-  const [created, setCreated] = useState<CreatedApiKey>();
+  const [workspace, setWorkspace] = useState(allWorkspaces);
+  const workspaceOptions: readonly ChoiceOption[] | undefined = workspaces
+    ? [{ id: allWorkspaces, label: "All workspaces" }, ...workspaces]
+    : undefined;
+  const [secret, setSecret] = useState<string>();
   const [nameDraft, setNameDraft] = useState("");
-  const doneRef = useRef<HTMLButtonElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (created) doneRef.current?.focus();
-  }, [created]);
   const action = useAsyncAction("Could not create key");
+  const role = roleOptions.find((option) => option.id === ceiling)?.id;
   const canCreate =
-    permissionOptions.some((option) => option.id === permission) &&
-    expiryOptions.some((option) => option.id === expiry);
+    role !== undefined &&
+    expiryOptions.some((option) => option.id === expiry) &&
+    (!workspaceOptions ||
+      workspaceOptions.some((option) => option.id === workspace));
   return (
     <Modal.Backdrop
       isOpen
@@ -68,39 +108,20 @@ function CreateContent({
         if (!action.isPending) onOpenChange(open);
       }}
     >
-      <Modal.Container size={created ? "md" : "sm"} scroll="inside">
+      <Modal.Container size={secret ? "md" : "sm"} scroll="inside">
         <Modal.Dialog>
           <Modal.Header>
             <Modal.Heading>
-              {created
-                ? created.token
-                  ? "Copy your API key"
-                  : "Key already created"
-                : "Create API key"}
+              {secret ? "Copy your API key" : "Create API key"}
             </Modal.Heading>
             <Modal.CloseTrigger isDisabled={action.isPending} />
           </Modal.Header>
           <Modal.Body>
-            {created ? (
-              <div className="grid gap-4">
-                <p>
-                  {created.token
-                    ? "Save this token in a secret manager. You won’t be able to view it again."
-                    : "This request already created a key. Its token can only be shown in the original response. Revoke it and create a replacement if you did not save it."}
-                </p>
-                {created.token ? (
-                  <CodeBlock>
-                    <CodeBlock.Header>
-                      <CodeBlock.Filename>Your new key</CodeBlock.Filename>
-                      <CodeBlock.CopyButton code={created.token} />
-                    </CodeBlock.Header>
-                    <CodeBlock.Code code={created.token} />
-                  </CodeBlock>
-                ) : null}
-                <Button ref={doneRef} onPress={() => onOpenChange(false)}>
-                  Done
-                </Button>
-              </div>
+            {secret ? (
+              <ApiKeySecret
+                secret={secret}
+                onDone={() => onOpenChange(false)}
+              />
             ) : (
               <form
                 className="grid gap-4"
@@ -116,9 +137,19 @@ function CreateContent({
                     return;
                   }
                   const result = await action.run(() =>
-                    onCreate({ name, permission, expiry }),
+                    onCreate({
+                      name,
+                      ceiling: role,
+                      workspace:
+                        workspaceOptions && workspace !== allWorkspaces
+                          ? workspace
+                          : null,
+                      expiresInSeconds: expiryInSeconds(expiry),
+                    }),
                   );
-                  if (result.ok) setCreated(result.value);
+                  if (!result.ok) return;
+                  if (result.value) setSecret(result.value.key);
+                  else onOpenChange(false);
                 }}
               >
                 <Field>
@@ -134,20 +165,31 @@ function CreateContent({
                       setNameDraft(event.currentTarget.value)
                     }
                     required
-                    maxLength={120}
+                    maxLength={100}
                     autoComplete="off"
                     variant="secondary"
                     disabled={action.isPending}
                   />
                 </Field>
                 <ChoiceField
-                  label="Permissions"
-                  value={permission}
-                  options={permissionOptions}
-                  onChange={setPermission}
+                  label="Role"
+                  value={ceiling}
+                  options={roleOptions}
+                  onChange={setCeiling}
+                  description="The key acts with the lower of this role and your own."
                   isRequired
                   isDisabled={action.isPending}
                 />
+                {workspaceOptions ? (
+                  <ChoiceField
+                    label="Workspace"
+                    value={workspace}
+                    options={workspaceOptions}
+                    onChange={setWorkspace}
+                    isRequired
+                    isDisabled={action.isPending}
+                  />
+                ) : null}
                 <ChoiceField
                   label="Expires after"
                   value={expiry}

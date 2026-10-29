@@ -1,4 +1,4 @@
-// @dsCard group="Auth" height=472 width=720
+// @dsCard group="Auth" height=360 width=720
 import * as A from "../namespace.js";
 import { mount } from "./mount.js";
 const brand = (
@@ -21,10 +21,8 @@ const brand = (
 mount(
   <A.SignIn
     brand={brand}
-    defaultEmail="ada@avgeek.dev"
-    onSubmit={async () => {}}
-    onForgotPassword={() => {}}
-    onResendVerification={() => {}}
-    onPasskeySignIn={() => {}}
+    productName="Avgeek"
+    providerName="authentik"
+    onContinue={() => {}}
   />,
 );

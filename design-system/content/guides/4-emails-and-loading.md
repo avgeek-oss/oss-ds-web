@@ -7,7 +7,7 @@
 - Brand with an app name, six-digit hex accent and optional public logo URL; pass light colors through `brand.theme`.
 - Set `accentForeground` for button text; a yellow accent needs dark text.
 - Layout: 560px container, Inter with system fallbacks, a primary action and a plain link fallback.
-- Links last one hour for security, seven days for invitations; invitation codes ten minutes.
+- Templates: `role-changed` and `access-removed`, naming the provider through `providerName`.
 - Apps own recipients, tokens, expiry, delivery and SMTP. Never put tokens in previews or logs.
 - Domain notices may use `EmailShell` with `renderEmailMessage`.
 

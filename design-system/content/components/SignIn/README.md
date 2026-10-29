@@ -1,9 +1,9 @@
 # SignIn
 
-The shared email-and-password sign-in screen.
+The shared SSO sign-in screen: one "Continue with <provider>" button.
 
-**Use for** public sign-in in every app. Recovery for unverified email appears only when `onSubmit` rejects with `code: "EMAIL_NOT_VERIFIED"`.
+**Use for** public sign-in in every app. There are no passwords, passkeys or email codes; the organisation's identity provider signs people in.
 
-**Provide** `brand`, awaited `onSubmit({ email, password })`, `isPending`, `onForgotPassword`, `onResendVerification`, `onPasskeySignIn`. Preview mark is a stand-in.
+**Provide** `brand`, `productName`, `providerName`, `onContinue` (navigate to the client's `signInUrl(returnTo)`), optional `error` from `readAuthRedirectError`, `isPending`. Preview mark is a stand-in.
 
-**Don't** change the standard copy or restyle headings and buttons.
+**Don't** add credential fields, change the standard copy or restyle headings and buttons. `ConnectedSignIn` does the URL work for you.

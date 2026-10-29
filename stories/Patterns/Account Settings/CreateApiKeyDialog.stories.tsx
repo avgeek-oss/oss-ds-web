@@ -14,7 +14,7 @@ function NameValidation() {
     setRequests((count) => count + 1);
     setName(values.name);
     await new Promise((resolve) => setTimeout(resolve, 600));
-    return { token: "preview-key" };
+    return { key: "preview-key" };
   };
   return (
     <div className="grid gap-3 p-6">
@@ -26,6 +26,7 @@ function NameValidation() {
       <CreateApiKeyDialog
         isOpen={isOpen}
         onOpenChange={setIsOpen}
+        ceilings={["viewer", "member", "admin"]}
         onCreate={onCreate}
       />
     </div>
@@ -52,7 +53,12 @@ export const Master: Story = {
   render: () => <NameValidation />,
 };
 
-export const Permissions: Story = {
-  name: "Permissions",
+export const Roles: Story = {
+  name: "Roles",
   render: () => <CreateApiKeyPreview />,
+};
+
+export const Workspace: Story = {
+  name: "Workspace",
+  render: () => <CreateApiKeyPreview workspaces />,
 };

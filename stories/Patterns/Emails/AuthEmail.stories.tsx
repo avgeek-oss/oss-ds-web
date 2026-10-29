@@ -7,7 +7,7 @@ import {
   type AuthEmailTemplate,
 } from "../../../src/emails/auth-email";
 function EmailPreview({
-  template = "password-reset",
+  template = "role-changed",
   app = "Towbar",
 }: {
   template?: AuthEmailTemplate;
@@ -30,8 +30,7 @@ function EmailPreview({
         },
         teamName: "Example team",
         actionUrl: "https://example.test/action#safe-example",
-        verificationCode:
-          template === "invitation-verification" ? "314159" : undefined,
+        providerName: "authentik",
         role: "member",
       }}
     />
@@ -46,7 +45,7 @@ function EmailPreview({
 }
 
 const meta = {
-  args: { template: "password-reset", app: "Towbar" },
+  args: { template: "role-changed", app: "Towbar" },
   argTypes: {
     template: { control: "select", options: [...authEmailTemplates] },
     app: {

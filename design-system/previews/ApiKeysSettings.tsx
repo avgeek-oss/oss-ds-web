@@ -13,21 +13,28 @@ mount(
         {
           id: "automation",
           name: "Release automation",
-          tokenHint: "key_••••12ab",
-          permissions: "Read and write boards and tasks",
+          ceiling: "admin",
+          workspace: null,
           createdAt: "2026-10-01T00:00:00Z",
           expiresAt: "2099-12-30T00:00:00Z",
           lastUsedAt: "2026-10-06T00:00:00Z",
+          replacedBy: null,
+          graceUntil: null,
         },
         {
           id: "reporting",
           name: "Reporting",
-          permissions: "Read only",
+          ceiling: "viewer",
+          workspace: null,
+          createdAt: "2026-09-01T00:00:00Z",
           expiresAt: null,
           lastUsedAt: null,
+          replacedBy: null,
+          graceUntil: null,
         },
       ]}
       formatDate={formatDate}
+      onRotate={async () => ({ key: "preview" })}
       onRevoke={async () => {}}
     />
   </div>,

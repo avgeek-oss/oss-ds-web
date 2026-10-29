@@ -18,14 +18,21 @@ The package targets React 19 and Tailwind CSS 4. Import `@avgeek-oss/design-syst
 import { Providers, SignIn } from "@avgeek-oss/design-system";
 import "@avgeek-oss/design-system/styles.css";
 
-// Mount Providers once around your app. API callbacks belong to the app.
+// Mount Providers once around your app. Navigation belongs to the app.
 <Providers>
   <SignIn
     brand="Avgeek"
-    onSubmit={signIn}
-    onForgotPassword={openPasswordReset}
+    productName="Avgeek"
+    providerName="authentik"
+    onContinue={() => location.assign(auth.signInUrl("/"))}
   />
 </Providers>;
+```
+
+Sign-in is SSO only, through the organisation's identity provider, with the roles `viewer`, `member` and `admin`. With [`@avgeek-oss/auth-client`](https://github.com/avgeek-oss/oss-auth/tree/main/packages/auth-client), the containers in `@avgeek-oss/design-system/patterns/auth/connected` (such as `ConnectedSignIn` and `ConnectedApiKeysSettings`) take its `AuthClient` and do the requests, step-up and error handling. The auth client is an optional peer, needed only when you import that subpath:
+
+```sh
+pnpm add @avgeek-oss/auth-client
 ```
 
 The root exports common layouts and patterns. Primitives also have explicit subpaths, such as `forms/input`, `pickers/date-picker`, and `data-display/table`. See the [component catalog](docs/components.md) for the available components; do not import unpublished internal paths.
@@ -34,9 +41,9 @@ The root exports common layouts and patterns. Primitives also have explicit subp
 
 - **Primitives:** buttons, form controls, tables, widgets, charts, overlays, typography, icons, and theme controls.
 - **Layouts:** application shell, primary and secondary navigation, page headings, breadcrumbs, and content sections.
-- **Patterns:** separate auth screens, two-step team setup, MCP authorization, account settings, team members, resource tables, notifications, and the account menu.
+- **Patterns:** SSO sign-in, access-denied and step-up screens, two-step team setup, MCP consent, account settings, the people directory and workspace members, connected auth containers, resource tables, notifications, and the account menu.
 
-Apps supply branding, routes, navigation groups, permissions, dates, and actions. API calls, authentication policy, credential ceremonies, and persistence stay in the app. Validation builders accept existing app limits; the package does not replace server authorization.
+Apps supply branding, routes, navigation groups, permissions, dates, and actions. API calls, authentication policy and persistence stay in the app; the connected auth containers use the app's `AuthClient`. Validation builders accept existing app limits; the package does not replace server authorization.
 
 Component usage and design rules are in [DESIGN.md](DESIGN.md). The [shared pattern guide](docs/patterns.md) covers account and team management, history/filtering, notification settings, integrations, operation progress, and their application boundaries.
 

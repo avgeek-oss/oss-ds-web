@@ -108,7 +108,7 @@ Modals, alert dialogs and drawers use 20px dialog padding, a 16px gap between th
 ```tsx
 <Modal.Dialog>
   <Modal.Header>
-    <Modal.Heading>Create invitation</Modal.Heading>
+    <Modal.Heading>Create API key</Modal.Heading>
     <Modal.CloseTrigger />
   </Modal.Header>
   <Modal.Body>{fields}</Modal.Body>
@@ -128,7 +128,7 @@ Use `text-sm` for body text and labels, `text-lg leading-7 font-medium` for page
 
 Use `Widget.Action` for inline underlined actions in widget headers and footers. Place filled buttons inside `Widget.Content` or in page actions; header and footer buttons always render as inline actions.
 
-`Table` is the HeroUI primitive: compose its header, rows, cells and footer directly. `ResourceTable` composes `Table` from an items array and column definitions, with optional record links, navigation callbacks and an empty state. Use it for record lists such as members, passkeys, sessions and API keys. Tables own their frame: never put `Table`, `ResourceTable`, `HistoryTable` or another table pattern inside `Widget`. Render the table directly and put counts in the page heading or table footer. `ResourceTable` defaults to a scrolling table. Set `mobileLayout="stacked"` to present the same native rows and cells as a two-column detail grid below 640px. Accessible column headers remain available, visible mobile labels identify each detail, and the row header spans the full width. Columns with `mobileFullWidth: true` also span the detail grid; use this for long metadata and action groups. No columns or metadata are removed. API-key and MCP connection tables keep their columns at every width, with horizontal scrolling contained inside the table. API keys use Name, Permissions, Added, Expires, Last used and Actions; elapsed expiry dates carry an Expired label. Record links use `RouteLink` with the application's navigation provider.
+`Table` is the HeroUI primitive: compose its header, rows, cells and footer directly. `ResourceTable` composes `Table` from an items array and column definitions, with optional record links, navigation callbacks and an empty state. Use it for record lists such as people, sessions and API keys. Tables own their frame: never put `Table`, `ResourceTable`, `HistoryTable` or another table pattern inside `Widget`. Render the table directly and put counts in the page heading or table footer. `ResourceTable` defaults to a scrolling table. Set `mobileLayout="stacked"` to present the same native rows and cells as a two-column detail grid below 640px. Accessible column headers remain available, visible mobile labels identify each detail, and the row header spans the full width. Columns with `mobileFullWidth: true` also span the detail grid; use this for long metadata and action groups. No columns or metadata are removed. API-key and MCP connection tables keep their columns at every width, with horizontal scrolling contained inside the table. API keys use Name, Role, Workspace (when a key has one), Added, Expires, Last used and Actions; elapsed expiry dates carry an Expired label. Record links use `RouteLink` with the application's navigation provider.
 
 Use `Widget` for related form content and metrics. Right-aligned actions require a right-aligned column header. Mark a meaningful row header with `isRowHeader` if it is not the first column. Empty-state content belongs inside the content area. Table cells have at most two lines: a primary value and optional secondary metadata. Place status chips and additional attributes in their own columns; do not append a third line below an identity. Truncate long values with an accessible full-value tooltip or use a detail view. Date formatters may return a primary date and one secondary time line, without wrapping either into additional lines. Table footers use `text-xs` muted metadata; the native table empty-state cell uses the same inner surface and padding as populated cells.
 
@@ -140,10 +140,17 @@ Wrap a retained application subtree in `OverlaySuspensionScope` when the app tem
 
 ```tsx
 <>
-  {expired && <SignIn brand={brand} onSubmit={signIn} />}
+  {expired && (
+    <SignIn
+      brand={brand}
+      productName="Posted"
+      providerName="authentik"
+      onContinue={signIn}
+    />
+  )}
   <OverlaySuspensionScope isSuspended={expired}>
     <div hidden={expired} inert={expired}>
-      <PasskeySettings {...passkeySettings} />
+      <ApiKeysSettings {...apiKeysSettings} />
     </div>
   </OverlaySuspensionScope>
 </>
@@ -151,14 +158,14 @@ Wrap a retained application subtree in `OverlaySuspensionScope` when the app tem
 
 Shared `Modal.Backdrop`, `AlertDialog.Backdrop`, `Dropdown.Popover`, `Popover.Content` and `Select.Popover` unmount their native portals during suspension. This releases native focus, inert and scroll locks without firing `onOpenChange`; logical open state retained by the native Root or the caller resumes when suspension ends. A standalone portal using only `defaultOpen` remounts its own local state. Native HeroUI props, refs, dismissal and interaction behavior remain available. A nested scope inherits its parent’s suspension.
 
-Passkey add/rename, API-key creation, member forms and notification-destination dialogs keep non-secret field drafts above their backdrop. Controlled custom fields and children must keep their own draft state above the native portal. Password fields inside a dismissed portal are intentionally not retained. Preferences date-format, time-format and time-zone selectors use the supported native Select portal. Other primitives that own a portal, including calendar/combobox popovers and drawers, are not controlled by this scope; applications must close those through their native controlled APIs or conditionally compose their portal with `useOverlaySuspension().isSuspended`.
+API-key creation and notification-destination dialogs keep non-secret field drafts above their backdrop. Controlled custom fields and children must keep their own draft state above the native portal. Password fields inside a dismissed portal are intentionally not retained. Preferences date-format, time-format and time-zone selectors use the supported native Select portal. Other primitives that own a portal, including calendar/combobox popovers and drawers, are not controlled by this scope; applications must close those through their native controlled APIs or conditionally compose their portal with `useOverlaySuspension().isSuspended`.
 
-After a resumed Modal, AlertDialog, Dropdown or Popover root, or a Select, closes, the wrapper waits for the native exit to detach and restores its native trigger through React Aria's public contexts. Passkey add/rename and recovery-code completion retain their management opener explicitly. Restoration skips suspended, unmounted, hidden, inert or disabled targets and preserves focus deliberately moved to another live control. Standalone controlled dialogs without a native trigger context keep the caller's focus-return responsibility.
+After a resumed Modal, AlertDialog, Dropdown or Popover root, or a Select, closes, the wrapper waits for the native exit to detach and restores its native trigger through React Aria's public contexts. Restoration skips suspended, unmounted, hidden, inert or disabled targets and preserves focus deliberately moved to another live control. Standalone controlled dialogs without a native trigger context keep the caller's focus-return responsibility.
 
-The application must abort or settle a suspended WebAuthn/request attempt and reject uncertain server acknowledgments. Shared async actions ignore a suspended or unmounted attempt’s late result and feedback, even after the same owner resumes. They retain pending state until the callback settles and permit a fresh request afterward. Unmount or key the retained application subtree when the authenticated owner changes so another account never inherits its drafts.
+The application must abort or settle a suspended request attempt and reject uncertain server acknowledgments. Shared async actions ignore a suspended or unmounted attempt’s late result and feedback, even after the same owner resumes. They retain pending state until the callback settles and permit a fresh request afterward. Unmount or key the retained application subtree when the authenticated owner changes so another account never inherits its drafts.
 
 For a custom async overlay, call `const isCurrent = capture()` from `useOverlaySuspension()` before awaiting the app callback, then check `isCurrent()` before showing feedback, closing the dialog or storing its result. The predicate becomes false after suspension or owner unmount and stays false after resumption. This only guards UI continuation; the app still owns cancellation, request identity and committed server data.
 
-Account settings breadcrumbs use `Account Settings / <page>` and routes `/settings/<page>`. Team settings use `Team Settings / <page>` and `/team-settings/<page>`; General is `/team-settings/general`. Sidebar labels use the same capitalization. A self-headed pattern such as PasskeySettings owns its heading padding; do not wrap its header and table in another gapped grid.
+Account settings breadcrumbs use `Account Settings / <page>` and routes `/settings/<page>`. Team settings use `Team Settings / <page>` and `/team-settings/<page>`; General is `/team-settings/general`. Sidebar labels use the same capitalization. A self-headed pattern owns its heading padding; do not wrap its header and table in another gapped grid.
 
-Account menus use API Keys, Email & Password and Leave Feedback, without a repository contribution item. Passkeys use the fingerprint icon, and sign out uses Logout01. Keep the shared light and dark surface ramp. It derives hue from the product accent with nearly neutral chroma; apps must not override backgrounds, cards, neutral controls or overlay colors. The sidebar identity highlight follows that accent in both themes. Settings category breadcrumbs are plain links, without a settings dropdown.
+Account menus use API Keys and Leave Feedback, without a repository contribution item. Sign out uses Logout01. Keep the shared light and dark surface ramp. It derives hue from the product accent with nearly neutral chroma; apps must not override backgrounds, cards, neutral controls or overlay colors. The sidebar identity highlight follows that accent in both themes. Settings category breadcrumbs are plain links, without a settings dropdown.

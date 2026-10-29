@@ -1,45 +1,24 @@
 import type { ReactNode } from "react";
 import { Chip } from "../../data-display/chip.js";
 import { ResourceTable, ResourceName } from "../resource-table.js";
-
-export { MembersTable, type Member } from "../team-settings/members-table.js";
 import { actionColumn, type Actions } from "./table-actions.js";
 
-export type Passkey = { id: string; name: string; createdAt: string };
-export function PasskeysTable({
-  items,
-  actions,
-  formatDate,
-}: {
-  items: Passkey[];
-  formatDate: (value: string) => ReactNode;
-} & Actions<Passkey>) {
-  return (
-    <ResourceTable
-      ariaLabel="Passkeys"
-      items={items}
-      getRowKey={(item) => item.id}
-      emptyTitle="No passkeys added"
-      emptyDescription=""
-      columns={[
-        { key: "name", header: "Name", cell: (item) => item.name || "Passkey" },
-        {
-          key: "created",
-          header: "Created",
-          cell: (item) => (
-            <time dateTime={item.createdAt}>{formatDate(item.createdAt)}</time>
-          ),
-        },
-        actionColumn(actions),
-      ]}
-    />
-  );
-}
+export {
+  PeopleDirectory,
+  type DirectoryPerson,
+} from "../team-settings/people-directory.js";
+
+/** A signed-in browser or device. */
 export type Session = {
   id: string;
+  /** The browser and device, such as "Safari on macOS". */
   name: string;
-  lastActive: string;
+  /** Where it was last used from, such as a city or network. */
+  detail?: string;
+  signedInAt?: string;
+  lastActive: string | null;
   expiresAt: string;
+  /** This browser. */
   current: boolean;
 };
 export function SessionsTable({
@@ -60,29 +39,36 @@ export function SessionsTable({
       columns={[
         {
           key: "session",
-          header: "Session",
+          header: "Device",
+          isRowHeader: true,
           cell: (item) => (
-            <ResourceName name={item.name} description={item.id} />
+            <div className="grid gap-1">
+              <ResourceName name={item.name} description={item.detail} />
+              {item.current ? (
+                <Chip size="sm" color="accent" className="w-fit">
+                  This device
+                </Chip>
+              ) : null}
+            </div>
           ),
+        },
+        {
+          key: "signed-in",
+          header: "Signed in",
+          className: "whitespace-nowrap",
+          cell: (item) => (item.signedInAt ? formatDate(item.signedInAt) : "—"),
         },
         {
           key: "last",
           header: "Last active",
-          cell: (item) => formatDate(item.lastActive),
+          className: "whitespace-nowrap",
+          cell: (item) => (item.lastActive ? formatDate(item.lastActive) : "—"),
         },
         {
           key: "expires",
           header: "Expires",
+          className: "whitespace-nowrap",
           cell: (item) => formatDate(item.expiresAt),
-        },
-        {
-          key: "status",
-          header: "Status",
-          cell: (item) => (
-            <Chip color={item.current ? "accent" : "success"}>
-              {item.current ? "Current" : "Active"}
-            </Chip>
-          ),
         },
         actionColumn(actions),
       ]}

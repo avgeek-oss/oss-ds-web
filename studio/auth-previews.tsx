@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { usePreviewOptions } from "./preview-options";
 import { preferenceOptions } from "./preference-options";
 import { BrandLockup } from "../src/media/brand-lockup";
@@ -6,42 +6,18 @@ import { AvgeekLogo } from "./avgeek-brand";
 import { Button } from "../src/buttons/button";
 import { toast } from "../src/overlays/toast";
 import { SignIn } from "../src/patterns/auth/sign-in";
-import { VerificationEmail } from "../src/patterns/auth/verification-email";
-import { ForgotPassword } from "../src/patterns/auth/forgot-password";
-import { ResetLinkSent } from "../src/patterns/auth/reset-link-sent";
-import { PasswordSetup } from "../src/patterns/auth/password-setup";
-import { AcceptInvitation } from "../src/patterns/auth/accept-invitation";
-import { InvitationVerification } from "../src/patterns/auth/invitation-verification";
-import { InvitationUnavailable } from "../src/patterns/auth/invitation-unavailable";
-import { PasskeyVerification } from "../src/patterns/auth/passkey-verification";
-import { RecoverySignIn } from "../src/patterns/auth/recovery-sign-in";
-import { RecoveryCodesScreen } from "../src/patterns/auth/recovery-codes-screen";
+import { AccessDenied } from "../src/patterns/auth/access-denied";
+import { StepUpDialog } from "../src/patterns/auth/step-up-dialog";
 import { TeamSetup } from "../src/patterns/auth/team-setup";
 import { McpAuthorization } from "../src/patterns/auth/mcp-authorization";
-import { ConfirmIdentityDialog } from "../src/patterns/auth/confirm-identity-dialog";
+import type { TeamRole } from "../src/patterns/team-settings/team-role-options";
 
 export const authPreviewBrand = (
   <BrandLockup logo={<AvgeekLogo />}>Avgeek</BrandLockup>
 );
 const brand = authPreviewBrand;
-const codes = Array.from(
-  { length: 8 },
-  (_, index) => `demo-${String(index + 1).padStart(4, "0")}-preview`,
-);
-export type AuthPreviewScreen =
-  | "SignIn"
-  | "VerificationEmail"
-  | "ForgotPassword"
-  | "ResetLinkSent"
-  | "PasswordSetup"
-  | "FirstPassword"
-  | "TeamSetup"
-  | "AcceptInvitation"
-  | "InvitationVerification"
-  | "InvitationUnavailable"
-  | "PasskeyVerification"
-  | "RecoverySignIn"
-  | "RecoveryCodesScreen";
+export const previewProvider = "authentik";
+export type AuthPreviewScreen = "SignIn" | "TeamSetup" | "AccessDenied";
 
 export function useAuthPreviewSubmit() {
   const { slowResponse: slow } = usePreviewOptions();
@@ -55,62 +31,26 @@ export function useAuthPreviewSubmit() {
   };
 }
 
-export function AuthPreview({
-  initial,
-  signInFailureCode,
-}: {
-  initial: AuthPreviewScreen;
-  signInFailureCode?: "EMAIL_NOT_VERIFIED";
-}) {
+export function AuthPreview({ initial }: { initial: AuthPreviewScreen }) {
   const [screen, setScreen] = useState(initial);
-  const [passkeyBusy, setPasskeyBusy] = useState(false);
-  const passkeyAttempt = useRef<AbortController | null>(null);
   const [setupRequests, setSetupRequests] = useState(0);
   const submit = useAuthPreviewSubmit();
-  const back = () => setScreen("SignIn");
-  const cancelPasskey = () => {
-    passkeyAttempt.current?.abort();
-    passkeyAttempt.current = null;
-    setPasskeyBusy(false);
-  };
-  useEffect(() => () => passkeyAttempt.current?.abort(), []);
-  const complete = async () => {
-    await submit();
-    toast.success("Preview completed");
-    back();
-  };
-  const common = { brand, onBackToSignIn: back };
   const views = {
     SignIn: (
       <SignIn
         brand={brand}
-        onForgotPassword={() => setScreen("ForgotPassword")}
-        onResendVerification={() => setScreen("VerificationEmail")}
-        onPasskeySignIn={() => setScreen("PasskeyVerification")}
-        onSubmit={async () => {
-          await submit();
-          if (signInFailureCode)
-            throw Object.assign(new Error("Verify your email to sign in."), {
-              code: signInFailureCode,
-            });
-          setScreen("PasskeyVerification");
-        }}
+        productName="Avgeek"
+        providerName={previewProvider}
+        onContinue={() => toast.info("Preview: continue to authentik")}
       />
     ),
-    VerificationEmail: <VerificationEmail {...common} onSubmit={submit} />,
-    ForgotPassword: (
-      <ForgotPassword
-        {...common}
-        onSubmit={async () => {
-          await submit();
-          setScreen("ResetLinkSent");
-        }}
+    AccessDenied: (
+      <AccessDenied
+        brand={brand}
+        productName="Avgeek"
+        providerName={previewProvider}
+        onTryAgain={() => setScreen("SignIn")}
       />
-    ),
-    ResetLinkSent: <ResetLinkSent {...common} />,
-    PasswordSetup: <PasswordSetup {...common} onSubmit={complete} />,
-    FirstPassword: (
-      <PasswordSetup {...common} mode="first" onSubmit={complete} />
     ),
     TeamSetup: (
       <TeamSetup
@@ -118,111 +58,67 @@ export function AuthPreview({
         preferenceOptions={preferenceOptions}
         onSubmit={async () => {
           setSetupRequests(setupRequests + 1);
-          await complete();
-        }}
-      />
-    ),
-    AcceptInvitation: (
-      <AcceptInvitation
-        {...common}
-        teamName="Avgeek"
-        role="Member"
-        onVerifyEmail={() => setScreen("InvitationVerification")}
-      />
-    ),
-    InvitationVerification: (
-      <InvitationVerification
-        brand={brand}
-        teamName="Avgeek"
-        onSubmit={async () => {
           await submit();
-          setScreen("FirstPassword");
+          toast.success("Preview completed");
         }}
       />
-    ),
-    InvitationUnavailable: <InvitationUnavailable {...common} />,
-    PasskeyVerification: (
-      <PasskeyVerification
-        {...common}
-        isPending={passkeyBusy}
-        onCancelRequest={cancelPasskey}
-        onRecoverySignIn={() => {
-          cancelPasskey();
-          setScreen("RecoverySignIn");
-        }}
-        onBackToSignIn={() => {
-          cancelPasskey();
-          back();
-        }}
-        onRetry={async () => {
-          if (passkeyAttempt.current) return;
-          const attempt = new AbortController();
-          passkeyAttempt.current = attempt;
-          setPasskeyBusy(true);
-          await new Promise((resolve) => setTimeout(resolve, 1200));
-          if (attempt.signal.aborted) return;
-          passkeyAttempt.current = null;
-          setPasskeyBusy(false);
-          toast.danger("Passkey verification was cancelled. Try again.");
-        }}
-      />
-    ),
-    RecoverySignIn: <RecoverySignIn {...common} onSubmit={complete} />,
-    RecoveryCodesScreen: (
-      <RecoveryCodesScreen brand={brand} codes={codes} onContinue={back} />
     ),
   };
   return <div data-setup-requests={setupRequests}>{views[screen]}</div>;
 }
 
-export function ConfirmIdentityPreview({
-  method = "password",
+export function StepUpPreview({
+  reason,
+  pending = false,
 }: {
-  method?: "password" | "passkey";
+  reason?: string;
+  pending?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const submit = useAuthPreviewSubmit();
-  const confirm = async () => {
-    await submit();
-    toast.success("Preview verified");
-    setOpen(false);
-  };
+  const [started, setStarted] = useState(pending);
   return (
     <div className="p-5">
-      <Button onPress={() => setOpen(true)}>Confirm identity</Button>
-      {method === "passkey" ? (
-        <ConfirmIdentityDialog
-          method="passkey"
-          isOpen={open}
-          onOpenChange={setOpen}
-          onConfirm={confirm}
-        />
-      ) : (
-        <ConfirmIdentityDialog
-          isOpen={open}
-          onOpenChange={setOpen}
-          onConfirm={confirm}
-        />
-      )}
+      <Button onPress={() => setOpen(true)}>Delete workspace</Button>
+      <StepUpDialog
+        isOpen={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setStarted(false);
+        }}
+        providerName={previewProvider}
+        reason={reason}
+        isPending={started}
+        onContinue={() => {
+          setStarted(true);
+          toast.info("Preview: continue to authentik");
+        }}
+      />
     </div>
   );
 }
+
 export function ConsentPreview({
   clientName = "Example MCP client",
   viewerRole = false,
   slowRequest = false,
+  localhost = false,
+  workspaces = false,
 }: {
   clientName?: string;
   viewerRole?: boolean;
   slowRequest?: boolean;
+  localhost?: boolean;
+  workspaces?: boolean;
 }) {
   const options = usePreviewOptions();
   const viewer = options.viewerRole ?? viewerRole;
   const slow = options.slowAuthorization ?? slowRequest;
   const fail = options.authorizationFailure;
-  const [accessLevel, setAccessLevel] = useState<"read" | "write" | "admin">(
-    "read",
-  );
+  const ceilings: TeamRole[] = viewer
+    ? ["viewer"]
+    : ["viewer", "member", "admin"];
+  const [ceiling, setCeiling] = useState<TeamRole>("viewer");
+  const [workspace, setWorkspace] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
   const requestPending = useRef(false);
@@ -250,15 +146,33 @@ export function ConsentPreview({
     <McpAuthorization
       brand={brand}
       productName="Towbar"
-      clientName={clientName}
-      clientLogo={
-        <span aria-hidden className="font-medium">
-          C
-        </span>
+      client={{
+        name: clientName,
+        id: "https://client.example.test/oauth/client.json",
+        logo: (
+          <span aria-hidden className="font-medium">
+            C
+          </span>
+        ),
+        redirectHost: localhost ? "127.0.0.1:53682" : "client.example.test",
+        localhost,
+      }}
+      resources={[{ uri: "https://api.towbar.example.test/mcp", name: "MCP" }]}
+      ceiling={ceiling}
+      ceilings={ceilings}
+      onCeilingChange={setCeiling}
+      workspace={
+        workspaces
+          ? {
+              options: [
+                { id: "ops", label: "Operations" },
+                { id: "fleet", label: "Fleet" },
+              ],
+              value: workspace,
+              onChange: setWorkspace,
+            }
+          : undefined
       }
-      accessLevel={accessLevel}
-      availableAccessLevels={viewer ? ["read"] : ["read", "write", "admin"]}
-      onAccessLevelChange={setAccessLevel}
       isPending={pending}
       error={error}
       onApprove={() => void decide(true)}

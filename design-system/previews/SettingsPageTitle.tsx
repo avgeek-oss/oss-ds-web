@@ -6,7 +6,7 @@ mount(
     <h1
       style={{ margin: 0, fontSize: 18, lineHeight: "28px", fontWeight: 500 }}
     >
-      <A.SettingsPageTitle section="passkeys" />
+      <A.SettingsPageTitle section="people" />
     </h1>
     <h1
       style={{ margin: 0, fontSize: 18, lineHeight: "28px", fontWeight: 500 }}

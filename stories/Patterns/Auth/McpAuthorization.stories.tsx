@@ -19,7 +19,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Interactive McpAuthorization examples using the shared exports. Applications own routing, permissions and persistence.",
+          "Interactive McpAuthorization examples using the shared exports: the client, where it returns to, a role ceiling capped at the person's own role, and an optional workspace. Applications own routing, permissions and persistence; ConnectedMcpConsent does the data work.",
       },
     },
   },
@@ -41,6 +41,16 @@ export const Pending: Story = {
   args: { slowAuthorization: true },
   name: "Pending",
   render: () => <ConsentPreview slowRequest />,
+};
+
+export const Localhost: Story = {
+  name: "Localhost",
+  render: () => <ConsentPreview localhost />,
+};
+
+export const Workspace: Story = {
+  name: "Workspace",
+  render: () => <ConsentPreview workspaces />,
 };
 
 export const LongClientName: Story = {

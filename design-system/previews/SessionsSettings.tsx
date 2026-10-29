@@ -1,4 +1,4 @@
-// @dsCard group="Account settings" height=208
+// @dsCard group="Account settings" height=264
 import * as A from "../namespace.js";
 import { mount } from "./mount.js";
 const formatDate = (value: string) =>
@@ -26,7 +26,9 @@ mount(
         },
       ]}
       formatDate={formatDate}
-      onRevoke={async () => {}}
+      onSignOutCurrent={async () => {}}
+      onSignOut={async () => {}}
+      onSignOutEverywhere={async () => {}}
     />
   </div>,
 );

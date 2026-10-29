@@ -22,8 +22,7 @@ import {
 } from "../src/data-display/relative-time.js";
 import {
   createNameSchema,
-  createInvitationSchema,
-  invitationSchema,
+  teamRoleSchema,
 } from "../src/patterns/settings/schemas.js";
 
 test("Codex names and metadata identifiers use ChatGPT branding without changing trust", () => {
@@ -56,25 +55,14 @@ test("Codex names and metadata identifiers use ChatGPT branding without changing
   }
 });
 
-test("common name limits, explicit domain limits and strict invitation fields are preserved", () => {
+test("common name limits and explicit domain limits are preserved, and roles are the three auth roles", () => {
   assert.equal(createNameSchema().safeParse("x".repeat(120)).success, true);
   assert.equal(createNameSchema().safeParse("x".repeat(121)).success, false);
   assert.equal(createNameSchema().safeParse("   ").success, false);
   assert.equal(createNameSchema(100).safeParse("x".repeat(101)).success, false);
   assert.equal(createNameSchema(120).safeParse("x".repeat(101)).success, true);
-  assert.equal(
-    invitationSchema.safeParse({ email: "alex@example.test", role: "owner" })
-      .success,
-    false,
-  );
-  assert.equal(
-    invitationSchema.safeParse({
-      email: "alex@example.test",
-      role: "admin",
-      permissions: ["everything"],
-    }).success,
-    false,
-  );
+  assert.deepEqual(teamRoleSchema.options, ["viewer", "member", "admin"]);
+  assert.equal(teamRoleSchema.safeParse("editor").success, false);
 });
 test("buttons and auth headings retain accessible names and semantics", () => {
   const button = renderToStaticMarkup(
@@ -109,27 +97,6 @@ test("the shared runtime has no Next.js or application package dependency", asyn
     }
   }
   await check("src");
-});
-
-test("distinct domain role validation does not broaden common team roles", () => {
-  const domainRoles = createInvitationSchema(["owner", "contributor"]);
-  assert.equal(
-    domainRoles.safeParse({ email: "alex@example.test", role: "contributor" })
-      .success,
-    true,
-  );
-  assert.equal(
-    domainRoles.safeParse({ email: "alex@example.test", role: "member" })
-      .success,
-    false,
-  );
-  assert.equal(
-    invitationSchema.safeParse({
-      email: "alex@example.test",
-      role: "contributor",
-    }).success,
-    false,
-  );
 });
 
 test("structured data cannot close its script element and preserves its values", () => {
@@ -185,12 +152,33 @@ test("new public entry points resolve to their sources and the root carries the 
     "patterns/text-field",
     "patterns/date-picker-field",
     "overlays/dialog",
+    "patterns/auth/access-denied",
+    "patterns/auth/step-up-dialog",
+    "patterns/auth/connected",
+    "patterns/account-settings/rotate-api-key-dialog",
+    "patterns/team-settings/people-directory",
+    "patterns/team-settings/workspace-members-settings",
   ]) {
     const target = manifest.exports[`./${entry}`];
     assert.ok(typeof target === "object", entry);
     assert.equal(target.import, `./dist/${entry}.js`);
-    await readFile(`src/${entry}.tsx`);
+    await readFile(`src/${entry}.tsx`).catch(() => readFile(`src/${entry}.ts`));
   }
+  // 2.0.0 removed the password, passkey, recovery, invitation and
+  // email-verification patterns.
+  for (const entry of [
+    "patterns/auth/forgot-password",
+    "patterns/auth/passkey-verification",
+    "patterns/auth/recovery-codes",
+    "patterns/auth/verification-email",
+    "patterns/auth/confirm-identity-dialog",
+    "patterns/account-settings/passkey-settings",
+    "patterns/account-settings/password-change-settings",
+    "patterns/account-settings/email-change-settings",
+    "patterns/team-settings/invite-member-dialog",
+    "patterns/team-settings/members-table",
+  ])
+    assert.equal(manifest.exports[`./${entry}`], undefined, entry);
   // The root barrel imports CSS modules, so its export list is read as text.
   const root = await readFile("src/index.ts", "utf8");
   for (const name of [
@@ -205,8 +193,17 @@ test("new public entry points resolve to their sources and the root carries the 
     "DatePickerField",
     "isTimeZone",
     "availableTimeZones",
+    "AccessDenied",
+    "accessDeniedStatus",
+    "authRedirectErrorMessage",
+    "StepUpDialog",
+    "RotateApiKeyDialog",
+    "PeopleDirectory",
+    "WorkspaceMembersSettings",
   ])
     assert.match(root, new RegExp(`(?:[{,\\s]|as )${name}[\\s,}]`), name);
+  for (const name of ["PasskeySettings", "InviteMemberDialog", "Connected"])
+    assert.doesNotMatch(root, new RegExp(`\\b${name}`), name);
 });
 
 test("time-zone helpers accept IANA names only and list UTC first without duplicates", async () => {
@@ -318,4 +315,42 @@ test("relative time is relative only on the client and formats units through Int
   assert.match(markup, /aria-label="Last synced: 29 Oct 2026, 11:55 UTC"/);
   assert.match(markup, /datetime="2026-10-29T11:55:00Z"/i);
   assert.doesNotMatch(markup, />[^<]*(?:ago|now)[^<]*</);
+});
+
+test("the auth client is an optional, type-only peer that only the connected subpath imports", async () => {
+  const manifest = JSON.parse(await readFile("package.json", "utf8")) as {
+    peerDependencies: Record<string, string>;
+    peerDependenciesMeta: Record<string, { optional?: boolean }>;
+  };
+  assert.ok(manifest.peerDependencies["@avgeek-oss/auth-client"]);
+  assert.equal(
+    manifest.peerDependenciesMeta["@avgeek-oss/auth-client"]?.optional,
+    true,
+  );
+  const importers: string[] = [];
+  async function check(directory: string) {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const path = `${directory}/${entry.name}`;
+      if (entry.isDirectory()) await check(path);
+      else if (/\.tsx?$/.test(entry.name)) {
+        const source = await readFile(path, "utf8");
+        const imports = [
+          ...source.matchAll(
+            /(?:import|export)(\s+type)?[^;]*?from\s+["']@avgeek-oss\/auth-client(?:\/[^"']*)?["']/g,
+          ),
+        ];
+        if (!imports.length) continue;
+        importers.push(path);
+        for (const found of imports)
+          assert.ok(
+            found[1],
+            `${path} must import the auth client as types only`,
+          );
+      }
+    }
+  }
+  await check("src");
+  assert.ok(importers.length > 0);
+  for (const path of importers)
+    assert.match(path, /^src\/patterns\/auth\/connected\//, path);
 });

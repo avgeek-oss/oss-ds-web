@@ -22,7 +22,7 @@ Primitives keep HeroUI's native variants. Patterns are complete, reviewed surfac
 - `Input`, `Textarea`, `PasswordInput`, `InputGroup`: text entry; `TextField` for a labelled input or textarea with help text.
 - `Field`, `Label`, `Description`: field structure and help text.
 - `Checkbox`, `Switch`: boolean settings.
-- `Select`: choosing from a list; `ChoiceField` for described role or permission choices and searchable app pickers such as assignees.
+- `Select`: choosing from a list; `ChoiceField` for described role choices and searchable app pickers such as assignees.
 - `ComboBox`, `Autocomplete`: searchable choices.
 - `FileUpload`: one image or PDF by picker or drag and drop.
 
@@ -59,8 +59,8 @@ Primitives keep HeroUI's native variants. Patterns are complete, reviewed surfac
 
 ## Patterns
 
-- Auth: `SignIn`, `ForgotPassword`, `VerificationEmail`, `PasswordSetup`, `PasskeyVerification`, `RecoveryCodesScreen`, `TeamSetup`, `AcceptInvitation`, `McpAuthorization`.
-- Account: `ProfileSettings`, `PreferencesSettings`, `PasskeySettings`, `SessionsSettings`, `ApiKeysSettings`, `McpGuideSettings`.
-- Team: `MembersTable`, `InvitationsTable`, `InviteMemberDialog`, `TeamGeneralSettings`.
+- Auth: `SignIn`, `AccessDenied`, `StepUpDialog`, `TeamSetup`, `McpAuthorization`; containers in `patterns/auth/connected`.
+- Account: `ProfileSettings`, `PreferencesSettings`, `SessionsSettings`, `ApiKeysSettings`, `CreateApiKeyDialog`, `RotateApiKeyDialog`, `McpConnectionsSettings`, `McpGuideSettings`.
+- Team: `PeopleDirectory`, `WorkspaceMembersSettings`, `TeamGeneralSettings`.
 - Assistant: `AgentChat` (panel in `AppLayout`'s `aside`), `AgentChatTrigger` (navbar button).
 - Data: `HistoryTable`, `FilterDialog`, `OperationProgress`, `IntegrationConnectionCard`, `NotificationMenu`, `NotificationDestinationsSettings`.

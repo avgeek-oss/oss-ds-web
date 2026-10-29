@@ -5,7 +5,7 @@ import { preferenceOptions } from "../../../studio/preference-options";
 import { TeamSetup } from "../../../src/patterns/auth/team-setup";
 import { toast } from "../../../src/overlays/toast";
 
-function SecretRetryExample() {
+function RetryExample() {
   const attempts = useRef(0);
   return (
     <TeamSetup
@@ -15,7 +15,7 @@ function SecretRetryExample() {
         attempts.current++;
         await new Promise((resolve) => setTimeout(resolve, 300));
         if (attempts.current === 1)
-          throw new Error("The installation setup secret is incorrect");
+          throw new Error("Could not save the team. Try again.");
         toast.success(`Setup completed for ${values.team}`);
       }}
     />
@@ -53,7 +53,7 @@ export const Master: Story = {
   render: () => <AuthPreview initial="TeamSetup" />,
 };
 
-export const SecretRetry: Story = {
-  name: "Secret retry",
-  render: () => <SecretRetryExample />,
+export const Retry: Story = {
+  name: "Retry",
+  render: () => <RetryExample />,
 };

@@ -1,6 +1,6 @@
 import { test, expect, focusRowAction, settleFocus } from "./fixtures.mjs";
 
-test("Codex metadata connections show a friendly name, logo and revocation title", async ({
+test("Codex metadata connections show a friendly name, logo, role and disconnect title", async ({
   page,
   fixtureUrl,
   width,
@@ -11,19 +11,18 @@ test("Codex metadata connections show a friendly name, logo and revocation title
     ),
   );
   await page.bringToFront();
-  const table = page.getByRole("grid", { name: "MCP connections" });
+  const table = page.getByRole("grid", { name: "Connected apps" });
   const codex = table.getByRole("rowheader").first();
   await expect(codex).toContainText("Codex");
   const name = codex.getByText("Codex", { exact: true });
   await expect(name).toBeVisible();
   expect((await name.boundingBox()).width).toBeGreaterThan(40);
   await expect(codex.locator("svg")).toHaveCount(1);
-  await expect(table).toContainText("Administrative permissions");
+  await expect(table).toContainText("Admin");
   await expect(table.getByRole("columnheader")).toHaveText([
     "App",
-    "Permissions",
-    "Added",
-    "Expires",
+    "Role",
+    "Connected",
     "Last used",
     "Actions",
   ]);
@@ -43,12 +42,12 @@ test("Codex metadata connections show a friendly name, logo and revocation title
     animations: "disabled",
   });
   const revoke = table
-    .getByRole("button", { name: "Revoke", exact: true })
+    .getByRole("button", { name: "Disconnect", exact: true })
     .first();
   await focusRowAction(page, revoke);
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", {
-    name: "Revoke Codex?",
+    name: "Disconnect Codex?",
     exact: true,
   });
   await expect(dialog).toBeVisible();
@@ -56,9 +55,7 @@ test("Codex metadata connections show a friendly name, logo and revocation title
   await expect(dialog).toHaveCount(0);
   await expect(revoke).toBeFocused();
   await revoke.click();
-  await dialog
-    .getByRole("button", { name: "Revoke connection", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "Disconnect", exact: true }).click();
   await expect(table.getByRole("rowheader")).toHaveCount(1);
   await expect(table.getByRole("rowheader")).toContainText("Example app");
 });
@@ -80,7 +77,7 @@ test("API keys retain every field, native row headers and reachable actions at m
   await expect(table).toBeVisible();
   await expect(table.getByRole("columnheader")).toHaveText([
     "Name",
-    "Permissions",
+    "Role",
     "Added",
     "Expires",
     "Last used",
@@ -90,39 +87,15 @@ test("API keys retain every field, native row headers and reachable actions at m
   await expect(table.getByRole("rowheader").first()).toContainText(
     "Automation key with a long identifiable name for release operations",
   );
-  await expect(table.getByRole("rowheader").first()).toContainText(
-    "key_••••12ab",
-  );
-  await expect(table.getByRole("rowheader").first()).not.toContainText(
-    "Active",
-  );
   await expect(table.getByText("Active", { exact: true })).toHaveCount(0);
   const expiry = table.getByRole("row").nth(3).getByRole("gridcell").nth(2);
   await expect(expiry).toContainText("Expired");
   await expect(expiry).toContainText("2000-01-01");
-  const permissions = table
-    .getByRole("gridcell", {
-      name: "Read and write boards, tasks and comments across the current workspace",
-      exact: true,
-    })
-    .locator('[data-slot="tooltip-trigger"]');
-  const permissionHeight = await permissions.evaluate((element) => ({
-    height: element.getBoundingClientRect().height,
-    lineHeight: Number.parseFloat(
-      globalThis.getComputedStyle(element).lineHeight,
-    ),
-  }));
-  expect(permissionHeight.height).toBeLessThanOrEqual(
-    permissionHeight.lineHeight * 2,
-  );
   await expect(
-    table.getByRole("gridcell", {
-      name: "Read and write boards, tasks and comments across the current workspace",
-      exact: true,
-    }),
-  ).toBeVisible();
+    table.getByRole("row").nth(1).getByRole("gridcell").first(),
+  ).toHaveText("Member");
   for (const date of ["2026-10-01", "2099-12-30", "2026-10-06"])
-    await expect(table.getByText(date, { exact: true })).toBeVisible();
+    await expect(table.getByText(date, { exact: true }).first()).toBeVisible();
   for (const description of await table
     .locator('[data-slot="table-cell-description"]')
     .all()) {
@@ -219,14 +192,15 @@ test("API keys retain every field, native row headers and reachable actions at m
   ).toBeVisible();
 });
 
-test("member identity remains visible beside account status and actions on narrow tables", async ({
+test("people identity remains visible beside role, source and last sign-in on narrow tables", async ({
   page,
   fixtureUrl,
+  width,
 }) => {
   await page.goto(
-    fixtureUrl("stories/Patterns/Team Settings/MembersTable.stories.tsx"),
+    fixtureUrl("stories/Patterns/Team Settings/PeopleDirectory.stories.tsx"),
   );
-  const table = page.getByRole("grid", { name: "Members", exact: true });
+  const table = page.getByRole("grid", { name: "People", exact: true });
   await expect(table).toBeVisible();
   const row = table.getByRole("rowheader").first();
   const identity = row.locator('[data-slot="tooltip-trigger"]');
@@ -235,7 +209,15 @@ test("member identity remains visible beside account status and actions on narro
     await expect(label).toBeVisible();
     expect((await label.boundingBox()).width).toBeGreaterThan(0);
   }
-  await expect(
-    table.getByRole("columnheader", { name: "Passkeys", exact: true }),
-  ).toBeAttached();
+  await expect(row).toContainText("(you)");
+  await expect(table.getByRole("columnheader")).toHaveText([
+    "Person",
+    "Role",
+    "Source",
+    "Last sign-in",
+  ]);
+  await expect(table.getByText("Suspended", { exact: true })).toBeVisible();
+  expect(
+    await page.evaluate(() => globalThis.document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(width);
 });

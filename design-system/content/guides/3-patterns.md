@@ -9,27 +9,23 @@ Apps fetch, authorize and persist; patterns own layout, copy and states.
 - Keep dialogs and drafts open after a failure; close only after success.
 - Use `AsyncActionButton` for an awaited action, with `confirmation` for consequence dialogs.
 - Map domain statuses to `StatusIndicator` with a label, chip color and optional icon.
-- Use `ChoiceField` for role, permission and expiry choices; plain `Select` otherwise.
+- Use `ChoiceField` for role and expiry choices; plain `Select` otherwise.
 
 ## Account settings
 
-- `ProfileSettings` is the Profile details widget; supply `value` and `onSave`.
-- `EmailChangeSettings` shows the current email, a pending change and resend cooldown.
-- `PasswordChangeSettings` checks confirmation first; set `requireCurrentPassword` from your auth policy.
-- `PasskeySettings`: omit `onRename` or `onReplaceRecoveryCodes` when unsupported.
-- `ApiKeysSettings` lists keys with awaited revocation; never store raw tokens.
-- `CreateApiKeyDialog` requires explicit Permissions and Expires after choices; it never defaults them.
+- `ProfileSettings` is read-only: name, email and role come from the identity provider and are changed there.
+- `SessionsSettings` signs out this browser; pass `onSignOut` and `onSignOutEverywhere` only when the backend supports them.
+- `ApiKeysSettings` shows each key's role ceiling, workspace, expiry and last use, with Rotate (grace period) and Revoke; never store raw secrets.
+- `CreateApiKeyDialog` requires explicit Role and Expires after choices, offers ceilings up to the person's role, and shows the secret once.
 - Keep MCP Connections on its own page below API Keys; use `McpGuideSettings` for client setup with `mcpClientConfigurations({ serverName, url })`.
 
 ## Team settings
 
-- `MembersTable` shows identity, role, account and security status; supply roles and row actions.
-- `InviteMemberDialog` shows the invitation link only after success.
-- Use `MemberEditDialog mode="role-only"` when admins may change access but not profiles.
-- Use `InvitationsTable` with copy, resend and revoke callbacks.
-- Use `RemoveMemberDialog` and `RevokeInvitationDialog` for the standard confirmations.
+- `PeopleDirectory` is the read-only directory mirrored from the provider: role, source, last sign-in and a Suspended badge for people without a role.
+- Roles and app access are changed in the identity provider, never in the app; there are no invitations.
+- `WorkspaceMembersSettings` edits workspace membership, which the app owns.
 - Use `TeamGeneralSettings`; set `mode="details"` only if the server stores a description.
-- Use `teamRoleOptions` for Admin, Member and Viewer pickers.
+- Use `teamRoleOptions` for Admin, Member and Viewer labels and ceiling pickers.
 
 ## Data and history
 
@@ -55,10 +51,11 @@ Apps fetch, authorize and persist; patterns own layout, copy and states.
 
 ## Auth
 
-- Use `SignIn`, `ForgotPassword`, `VerificationEmail`, `PasswordSetup` and `PasskeyVerification` for public auth.
-- Use `AcceptInvitation` when invitations need email-code verification; `InvitationPasswordSetup` when the link proves identity.
-- Use `PasskeyRecoveryVerification` after a password passes with a pending passkey challenge.
-- Use `ConfirmIdentityDialog` for step-up checks; `method="custom"` for app-owned ceremonies.
+- Sign-in is SSO only: `SignIn` has one "Continue with <provider>" button and shows the redirect error.
+- Use `AccessDenied` when the provider has not given someone the app, their role was removed, or they were deactivated.
+- Use `StepUpDialog` for `step_up_required`: the person signs in again at the provider and the action finishes on return.
+- `McpAuthorization` shows the client, where it returns to, a localhost warning and a role ceiling capped at the person's role.
+- `patterns/auth/connected` containers take an `AuthClient` from `@avgeek-oss/auth-client` and do the data work.
 
 ## Errors and loading
 

@@ -42,7 +42,6 @@ export {
   IdentityAuthFrame,
   IdentityAuthHeading,
 } from "./patterns/auth/identity-auth-frame.js";
-export { IdentityCredentialsForm } from "./patterns/auth/identity-credentials-form.js";
 export {
   ApplicationPage,
   ContentPage,
@@ -52,12 +51,13 @@ export {
 export { AuthScreen } from "./patterns/auth/auth-screen.js";
 export {
   McpAuthorization,
-  type McpAccessLevel,
   type McpAuthorizationProps,
+  type McpAuthorizationClient,
+  type McpAuthorizationResource,
+  type McpAuthorizationWorkspace,
 } from "./patterns/auth/mcp-authorization.js";
 export { TeamSetup, type TeamSetupValues } from "./patterns/auth/team-setup.js";
 export { AuthForm, type AuthField } from "./patterns/auth/auth-form.js";
-export { RecoveryCodes } from "./patterns/auth/recovery-codes.js";
 export {
   NotificationMenu,
   type NotificationItem,
@@ -79,51 +79,23 @@ export {
 } from "./patterns/agent-chat/agent-chat-trigger.js";
 export { SidebarAccountMenu } from "./patterns/sidebar-account-menu.js";
 
-export { SignIn, type SignInProps } from "./patterns/auth/sign-in.js";
 export {
-  VerificationEmail,
-  type VerificationEmailProps,
-} from "./patterns/auth/verification-email.js";
+  SignIn,
+  authRedirectErrorMessage,
+  type SignInProps,
+  type AuthCopyNames,
+  type AuthRedirectErrorDetails,
+} from "./patterns/auth/sign-in.js";
 export {
-  ForgotPassword,
-  type ForgotPasswordProps,
-} from "./patterns/auth/forgot-password.js";
+  AccessDenied,
+  accessDeniedStatus,
+  type AccessDeniedProps,
+  type AccessDeniedStatus,
+} from "./patterns/auth/access-denied.js";
 export {
-  ResetLinkSent,
-  type ResetLinkSentProps,
-} from "./patterns/auth/reset-link-sent.js";
-export {
-  PasswordSetup,
-  type PasswordSetupProps,
-} from "./patterns/auth/password-setup.js";
-export {
-  AcceptInvitation,
-  type AcceptInvitationProps,
-} from "./patterns/auth/accept-invitation.js";
-export {
-  InvitationVerification,
-  type InvitationVerificationProps,
-} from "./patterns/auth/invitation-verification.js";
-export {
-  InvitationUnavailable,
-  type InvitationUnavailableProps,
-} from "./patterns/auth/invitation-unavailable.js";
-export {
-  PasskeyVerification,
-  type PasskeyVerificationProps,
-} from "./patterns/auth/passkey-verification.js";
-export {
-  RecoverySignIn,
-  type RecoverySignInProps,
-} from "./patterns/auth/recovery-sign-in.js";
-export {
-  RecoveryCodesScreen,
-  type RecoveryCodesScreenProps,
-} from "./patterns/auth/recovery-codes-screen.js";
-export {
-  ConfirmIdentityDialog,
-  type ConfirmIdentityDialogProps,
-} from "./patterns/auth/confirm-identity-dialog.js";
+  StepUpDialog,
+  type StepUpDialogProps,
+} from "./patterns/auth/step-up-dialog.js";
 
 export {
   ProfileSettings,
@@ -134,12 +106,9 @@ export {
   type PreferencesSettingsProps,
 } from "./patterns/account-settings/preferences-settings.js";
 export {
-  PasskeySettings,
-  type PasskeySettingsProps,
-} from "./patterns/account-settings/passkey-settings.js";
-export {
   SessionsSettings,
   type SessionsSettingsProps,
+  type Session,
 } from "./patterns/account-settings/sessions-settings.js";
 export {
   ApiKeysSettings,
@@ -147,25 +116,8 @@ export {
 } from "./patterns/account-settings/api-keys-settings.js";
 
 export {
-  MembersTable,
-  type Member,
-  type MembersTableProps,
-} from "./patterns/team-settings/members-table.js";
-
-export {
-  EmailChangeSettings,
-  type EmailChangeSettingsProps,
-  type PendingEmailChange,
-} from "./patterns/account-settings/email-change-settings.js";
-
-export {
-  PasswordChangeSettings,
-  type PasswordChangeSettingsProps,
-  type PasswordChangeValues,
-} from "./patterns/account-settings/password-change-settings.js";
-
-export {
   ApiKeysTable,
+  isApiKeyUsable,
   type ApiKeysTableProps,
   type ApiKey,
   AuthorizedClientsTable,
@@ -177,34 +129,27 @@ export {
   CreateApiKeyDialog,
   type CreateApiKeyDialogProps,
   type CreateApiKeyValues,
-  apiKeyPermissionOptions,
+  type IssuedApiKeySecret,
   apiKeyExpiryOptions,
-  type CreatedApiKey,
 } from "./patterns/account-settings/create-api-key-dialog.js";
 
 export {
-  InvitationsTable,
-  type InvitationsTableProps,
-  type Invitation,
-} from "./patterns/team-settings/invitations-table.js";
+  RotateApiKeyDialog,
+  type RotateApiKeyDialogProps,
+  apiKeyGraceOptions,
+} from "./patterns/account-settings/rotate-api-key-dialog.js";
 
 export {
-  InviteMemberDialog,
-  type InviteMemberDialogProps,
-  type InviteMemberValues,
-} from "./patterns/team-settings/invite-member-dialog.js";
+  PeopleDirectory,
+  type PeopleDirectoryProps,
+  type DirectoryPerson,
+  type DirectoryRoleSource,
+} from "./patterns/team-settings/people-directory.js";
 
 export {
-  MemberEditDialog,
-  type MemberEditDialogProps,
-  type MemberEditValues,
-} from "./patterns/team-settings/member-edit-dialog.js";
-
-export {
-  AddMemberDialog,
-  type AddMemberDialogProps,
-  type AddMemberValues,
-} from "./patterns/team-settings/add-member-dialog.js";
+  WorkspaceMembersSettings,
+  type WorkspaceMembersSettingsProps,
+} from "./patterns/team-settings/workspace-members-settings.js";
 
 export {
   HistoryTable,
@@ -302,34 +247,9 @@ export {
 } from "./patterns/account-settings/profile-image-settings.js";
 
 export {
-  InvitationPasswordSetup,
-  type InvitationPasswordSetupProps,
-} from "./patterns/auth/invitation-password-setup.js";
-
-export {
-  PasskeyRecoveryVerification,
-  type PasskeyRecoveryVerificationProps,
-} from "./patterns/auth/passkey-recovery-verification.js";
-
-export {
-  RemoveMemberDialog,
-  type RemoveMemberDialogProps,
-} from "./patterns/team-settings/remove-member-dialog.js";
-
-export {
-  RevokeInvitationDialog,
-  type RevokeInvitationDialogProps,
-} from "./patterns/team-settings/revoke-invitation-dialog.js";
-
-export {
   TeamGeneralSettings,
   type TeamGeneralSettingsProps,
 } from "./patterns/team-settings/team-general-settings.js";
-
-export {
-  EmailConfirmation,
-  type EmailConfirmationProps,
-} from "./patterns/auth/email-confirmation.js";
 
 export {
   dateFormatOptions,
