@@ -10,36 +10,29 @@ import {
   type DateTimePreferences,
 } from "../settings/date-time-preference-fields.js";
 
-type AccountDetails = {
-  setupSecret: string;
-  team: string;
-  name: string;
-  email: string;
-  password: string;
-};
-export type TeamSetupValues = AccountDetails & DateTimePreferences;
+type TeamDetails = { team: string };
+/**
+ * The team name and the first admin's display preferences. The admin's
+ * identity comes from the identity provider.
+ */
+export type TeamSetupValues = TeamDetails & DateTimePreferences;
 
 export function TeamSetup({
   brand,
   preferenceOptions,
   initialPreferences,
-  setupSecretDescription,
+  maxLength = 120,
   onSubmit,
 }: {
   brand: ReactNode;
   preferenceOptions: DateTimePreferenceOptions;
   initialPreferences?: DateTimePreferences;
-  setupSecretDescription?: string;
+  /** The team name limit; the common 120 by default. */
+  maxLength?: number;
   onSubmit: (values: TeamSetupValues) => Promise<void>;
 }) {
   const [step, setStep] = useState<1 | 2>(1);
-  const [account, setAccount] = useState<AccountDetails>({
-    setupSecret: "",
-    team: "",
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [account, setAccount] = useState<TeamDetails>({ team: "" });
   const [preferences, setPreferences] = useState(
     () => initialPreferences ?? browserDateTimePreferences(preferenceOptions),
   );
@@ -54,43 +47,8 @@ export function TeamSetup({
     }
   }, [step]);
 
-  const fields: Array<AuthField & { name: keyof AccountDetails }> = [
-    {
-      name: "setupSecret",
-      label: "Installation setup secret",
-      type: "password",
-      required: true,
-      maxLength: 1024,
-      autoComplete: "off",
-      description:
-        setupSecretDescription ??
-        "Copy the installation setup secret from your API startup logs.",
-    },
-    { name: "team", label: "Team name", required: true, maxLength: 120 },
-    {
-      name: "name",
-      label: "Your Name",
-      required: true,
-      maxLength: 120,
-      autoComplete: "name",
-    },
-    {
-      name: "email",
-      label: "Email",
-      type: "email",
-      required: true,
-      autoComplete: "email",
-    },
-    {
-      name: "password",
-      label: "Password",
-      type: "password",
-      required: true,
-      minLength: 15,
-      autoComplete: "new-password",
-      description:
-        "Use at least 15 characters. A long, unique passphrase works well.",
-    },
+  const fields: Array<AuthField & { name: keyof TeamDetails }> = [
+    { name: "team", label: "Team name", required: true, maxLength },
   ];
   return (
     <AuthScreen
@@ -112,7 +70,7 @@ export function TeamSetup({
               />
               <span className="sr-only">
                 Step {number} of 2:{" "}
-                {number === 1 ? "Account details" : "Preferences"}
+                {number === 1 ? "Team details" : "Preferences"}
               </span>
             </li>
           ))}
@@ -121,7 +79,7 @@ export function TeamSetup({
       title={step === 1 ? "Set up your team" : "Set your preferences"}
       description={
         step === 1
-          ? "Create your team and admin account."
+          ? "Name your team. You'll be its first admin."
           : "Choose how dates and times appear."
       }
     >

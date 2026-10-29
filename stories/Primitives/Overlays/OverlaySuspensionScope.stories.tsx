@@ -1,35 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
 import { UNSAFE_PortalProvider } from "react-aria";
-import {
-  OverlaySuspensionScope,
-  useOverlaySuspension,
-} from "../../../src/overlays/overlay-suspension";
+import { OverlaySuspensionScope } from "../../../src/overlays/overlay-suspension";
 import { Modal } from "../../../src/overlays/modal";
 import { AlertDialog } from "../../../src/overlays/alert-dialog";
 import { Dropdown } from "../../../src/overlays/dropdown";
 import { Popover } from "../../../src/overlays/popover";
 import { Button } from "../../../src/buttons/button";
-import { PasskeySettings } from "../../../src/patterns/account-settings/passkey-settings";
 import { CreateApiKeyDialog } from "../../../src/patterns/account-settings/create-api-key-dialog";
-import { InviteMemberDialog } from "../../../src/patterns/team-settings/invite-member-dialog";
 import { ActionConfirmation } from "../../../src/patterns/actions/action-confirmation";
 import { CodeBlock } from "../../../src/typography/code-block";
-import { RecoveryCodes } from "../../../src/patterns/auth/recovery-codes";
 import { PreferencesSettingsPreview } from "../../../studio/account-settings-previews";
 
-type Kind =
-  | "passkey"
-  | "passkey-rename"
-  | "passkey-recovery"
-  | "key"
-  | "invite"
-  | "confirmation"
-  | "modal"
-  | "alert"
-  | "dropdown"
-  | "popover";
-type ClipboardKind = "code" | "recovery" | "preferences";
+type Kind = "key" | "confirmation" | "modal" | "alert" | "dropdown" | "popover";
+type ClipboardKind = "code" | "preferences";
 function SuspensionPreview({
   kind,
   rerenderOnClose = false,
@@ -136,19 +120,6 @@ function SuspensionContent({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const destination = useRef<HTMLButtonElement>(null);
-  const [passkeys, setPasskeys] = useState(
-    kind === "passkey-rename"
-      ? [
-          {
-            id: "key-1",
-            name: "Security key",
-            createdAt: "2026-10-07T00:00:00Z",
-          },
-        ]
-      : [],
-  );
-  const [codes, setCodes] = useState<readonly string[]>([]);
-  const suspension = useOverlaySuspension();
   if (kind === "preferences") return <PreferencesSettingsPreview />;
   if (kind === "code")
     return (
@@ -160,47 +131,6 @@ function SuspensionContent({
         <CodeBlock.Code code="Plain text" />
       </CodeBlock>
     );
-  if (kind === "recovery")
-    return (
-      <RecoveryCodes
-        codes={["demo-0001-preview"]}
-        onContinue={() => setOpen(false)}
-      />
-    );
-  if (
-    kind === "passkey" ||
-    kind === "passkey-rename" ||
-    kind === "passkey-recovery"
-  )
-    return (
-      <PasskeySettings
-        items={passkeys}
-        formatDate={(value) => value}
-        onAdd={async () => {
-          const isCurrent = suspension.capture();
-          await request();
-          if (isCurrent() && kind === "passkey-recovery")
-            setCodes(["demo-0001-preview"]);
-        }}
-        onRename={
-          kind === "passkey-rename"
-            ? async (id, name) => {
-                const isCurrent = suspension.capture();
-                await request();
-                if (isCurrent())
-                  setPasskeys((items) =>
-                    items.map((item) =>
-                      item.id === id ? { ...item, name } : item,
-                    ),
-                  );
-              }
-            : undefined
-        }
-        onRemove={request}
-        recoveryCodes={codes}
-        onDismissRecoveryCodes={() => setCodes([])}
-      />
-    );
   if (kind === "key")
     return (
       <>
@@ -208,25 +138,11 @@ function SuspensionContent({
         <CreateApiKeyDialog
           isOpen={open}
           onOpenChange={setOpen}
+          ceilings={["viewer", "member"]}
           expiryOptions={[{ id: "never", label: "Never" }]}
           onCreate={async () => {
             await request();
-            return { token: "preview-key" };
-          }}
-        />
-      </>
-    );
-  if (kind === "invite")
-    return (
-      <>
-        <Button onPress={() => setOpen(true)}>Create invitation</Button>
-        <InviteMemberDialog
-          isOpen={open}
-          onOpenChange={setOpen}
-          roles={[{ id: "member", label: "Member" }]}
-          onInvite={async () => {
-            await request();
-            return { inviteUrl: "https://example.test/invite/preview" };
+            return { key: "preview-key" };
           }}
         />
       </>
@@ -324,27 +240,12 @@ type Story = StoryObj;
 
 export const Master: Story = {
   name: "Master",
-  render: () => <SuspensionPreview kind="passkey" />,
-};
-
-export const PasskeyRename: Story = {
-  name: "PasskeyRename",
-  render: () => <SuspensionPreview kind="passkey-rename" />,
-};
-
-export const PasskeyRecovery: Story = {
-  name: "PasskeyRecovery",
-  render: () => <SuspensionPreview kind="passkey-recovery" />,
+  render: () => <SuspensionPreview kind="key" />,
 };
 
 export const ApiKey: Story = {
   name: "ApiKey",
   render: () => <SuspensionPreview kind="key" />,
-};
-
-export const Invitation: Story = {
-  name: "Invitation",
-  render: () => <SuspensionPreview kind="invite" />,
 };
 
 export const Confirmation: Story = {
@@ -375,11 +276,6 @@ export const PopoverExample: Story = {
 export const CodeBlockExample: Story = {
   name: "CodeBlock",
   render: () => <SuspensionPreview kind="code" />,
-};
-
-export const RecoveryCodesExample: Story = {
-  name: "RecoveryCodes",
-  render: () => <SuspensionPreview kind="recovery" />,
 };
 
 export const Preferences: Story = {

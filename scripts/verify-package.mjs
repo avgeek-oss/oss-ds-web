@@ -218,7 +218,7 @@ import "${manifest.name}/styles.css";
 const entryPoints = [${entryPoints.map((_, index) => `entry${index}`).join(", ")}];
 if (entryPoints.some((entry) => entry == null)) throw new Error("Missing public entry point");
 createRoot(document.getElementById("root")!).render(
-  <Providers><SignIn brand="Avgeek" onSubmit={async () => {}} onForgotPassword={() => {}} /></Providers>
+  <Providers><SignIn brand="Avgeek" productName="Consumer" providerName="authentik" onContinue={() => {}} /></Providers>
 );
 `,
     );
@@ -243,9 +243,9 @@ export default defineConfig({plugins: [react(), tailwindcss()]});
       path.join(consumer, "email-consumer.mjs"),
       `import assert from "node:assert/strict";
 import { renderAuthEmail } from "${manifest.name}/emails/render";
-const email = await renderAuthEmail("password-reset", {brand: {name: "Consumer", accentColor: "#0866bd"}, actionUrl: "https://example.test/reset#token"});
-assert.match(email.html, /Reset password/);
-assert.ok(email.text.includes("https://example.test/reset#token"));
+const email = await renderAuthEmail("role-changed", {brand: {name: "Consumer", accentColor: "#0866bd"}, role: "viewer", actionUrl: "https://example.test/settings#roles"});
+assert.match(email.html, /Your team access changed/);
+assert.ok(email.text.includes("https://example.test/settings#roles"));
 assert.equal(typeof globalThis.document, "undefined");
 `,
     );
@@ -255,6 +255,28 @@ assert.equal(typeof globalThis.document, "undefined");
       !consumerModules.includes("next"),
       "The shared runtime must build without Next.js",
     );
+    // The consumer imports every entry point, the connected containers too,
+    // without @avgeek-oss/auth-client installed: it is an optional peer that
+    // the package uses for types only.
+    assert.ok(
+      !(
+        await readdir(path.join(consumer, "node_modules/@avgeek-oss"))
+      ).includes("auth-client"),
+      "The consumer must not install the optional auth client",
+    );
+    async function checkRuntimeImports(directory) {
+      for (const file of await readdir(directory, { withFileTypes: true })) {
+        const location = path.join(directory, file.name);
+        if (file.isDirectory()) await checkRuntimeImports(location);
+        else if (file.name.endsWith(".js"))
+          assert.doesNotMatch(
+            await readFile(location, "utf8"),
+            /["']@avgeek-oss\/auth-client/,
+            `${location} must not import the auth client at runtime`,
+          );
+      }
+    }
+    await checkRuntimeImports(path.join(packed, "dist"));
     run(pnpm, ["exec", "tsc"], consumer);
     run(pnpm, ["exec", "vite", "build"], consumer);
     const assetFiles = await readdir(path.join(consumer, "dist/assets"));
@@ -308,7 +330,7 @@ import { Providers, SignIn } from "${manifest.name}";
 import { NextNavigationProvider } from "${manifest.name}/adapters/next";
 export default function Page() {
   return <Providers><NextNavigationProvider>
-    <SignIn brand="Avgeek" onSubmit={async () => {}} onForgotPassword={() => {}} />
+    <SignIn brand="Avgeek" productName="Consumer" providerName="authentik" onContinue={() => {}} />
   </NextNavigationProvider></Providers>;
 }
 `,
@@ -368,6 +390,7 @@ export default function Page() {
         "Next.js adapter production build",
         "Tailwind source scanning",
         "auth styles",
+        "optional auth client",
         "font assets",
       ],
     });

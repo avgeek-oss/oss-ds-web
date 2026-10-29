@@ -10,7 +10,7 @@ for (const app of ["Towbar", "Mill", "Rootset", "Vitalog"]) {
         name: "<ScRiPt>name</ScRiPt>",
         teamName: "Research & <Team>",
         actionUrl: "https://example.test/action#secret-token",
-        verificationCode: "314159",
+        providerName: "authentik",
         role: "viewer",
       });
       assert.match(email.subject, new RegExp(`^\\[${app}\\] `));
@@ -23,10 +23,7 @@ for (const app of ["Towbar", "Mill", "Rootset", "Vitalog"]) {
       assert.ok(email.text.includes("Research & <Team>"));
       assert.doesNotMatch(email.text, /TOTP|authenticator/i);
       if (app !== "Towbar") assert.doesNotMatch(email.text, /Towbar/);
-      if (template === "invitation-verification") {
-        assert.match(email.text, /Verification code: 314159/);
-        assert.match(email.html, /314159/);
-      }
+      assert.doesNotMatch(email.text, /password|passkey|invitation/i);
     }
   });
 }
@@ -37,19 +34,19 @@ test("email links reject executable protocols and credentials, and branding reje
     "https://name:password@example.test/action",
   ]) {
     await assert.rejects(
-      renderAuthEmail("password-reset", {
+      renderAuthEmail("role-changed", {
         brand: { name: "Example", accentColor: "#0866bd" },
         actionUrl,
       }),
     );
   }
   await assert.rejects(
-    renderAuthEmail("password-reset", {
+    renderAuthEmail("role-changed", {
       brand: { name: "Example", accentColor: "red;background:url(x)" },
     }),
   );
   await assert.rejects(
-    renderAuthEmail("password-reset", {
+    renderAuthEmail("role-changed", {
       brand: {
         name: "Example",
         accentColor: "#0866bd",
@@ -70,17 +67,23 @@ test("email links reject executable protocols and credentials, and branding reje
   assert.match(result.html, /&lt;img src=x&gt;/);
 });
 
-test("older invitation payloads without a role do not invent membership permissions", async () => {
-  const email = await renderAuthEmail("invitation", {
+test("role changes without a role do not invent permissions and name the provider", async () => {
+  const email = await renderAuthEmail("role-changed", {
     brand: { name: "Example", accentColor: "#0866bd" },
-    actionUrl: "https://example.test/invite",
   });
-  assert.match(email.text, /You have been invited to Example\./);
-  assert.doesNotMatch(email.text, /as Member|Create and update/);
+  assert.match(email.text, /Your role in Example changed\./);
+  assert.doesNotMatch(email.text, /Member|Create and update/);
+  assert.match(email.text, /your organisation's identity provider/);
+  const removed = await renderAuthEmail("access-removed", {
+    brand: { name: "Example", accentColor: "#0866bd" },
+    providerName: "authentik",
+  });
+  assert.match(removed.text, /removed in authentik/);
+  assert.match(removed.text, /sessions, API keys and connected apps/);
 });
 
 test("application email themes keep button text independent of the surface and render the brand name", async () => {
-  const email = await renderAuthEmail("password-reset", {
+  const email = await renderAuthEmail("role-changed", {
     brand: {
       name: "Rootset",
       accentColor: "#2d5e44",
@@ -102,7 +105,7 @@ test("application email themes keep button text independent of the surface and r
   assert.match(email.text, /Rootset/);
   for (const key of ["surface", "foreground", "muted", "accentForeground"]) {
     await assert.rejects(
-      renderAuthEmail("password-reset", {
+      renderAuthEmail("role-changed", {
         brand: {
           name: "Example",
           accentColor: "#2d5e44",

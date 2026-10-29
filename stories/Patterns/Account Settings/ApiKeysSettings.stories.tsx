@@ -9,31 +9,35 @@ import {
   TableCellDescription,
 } from "../../../src/data-display/table-cell-text";
 
+const base = {
+  workspace: null,
+  createdAt: "2026-10-01",
+  lastUsedAt: null,
+  replacedBy: null,
+  graceUntil: null,
+} as const;
 const keys: ApiKey[] = [
   {
+    ...base,
     id: "automation",
     name: "Automation key with a long identifiable name for release operations",
-    tokenHint: "key_••••12ab",
-    permissions:
-      "Read and write boards, tasks and comments across the current workspace",
-    createdAt: "2026-10-01",
+    ceiling: "member",
     expiresAt: "2099-12-30",
     lastUsedAt: "2026-10-06",
-    status: { label: "Active", color: "success" },
   },
   {
+    ...base,
     id: "reporting",
     name: "Reporting",
-    permissions: "Read only",
+    ceiling: "viewer",
     expiresAt: null,
-    lastUsedAt: null,
   },
   {
+    ...base,
     id: "expired",
     name: "Previous integration",
-    permissions: "Read only",
+    ceiling: "viewer",
     expiresAt: "2000-01-01",
-    lastUsedAt: null,
   },
 ];
 
@@ -72,7 +76,15 @@ function FocusReturnExample() {
     <div className="grid gap-4 p-4">
       <Button variant="secondary">Other action</Button>
       <ApiKeysSettings
-        items={[{ id: "automation", name: "Automation", expiresAt: null }]}
+        items={[
+          {
+            ...base,
+            id: "automation",
+            name: "Automation",
+            ceiling: "member",
+            expiresAt: null,
+          },
+        ]}
         formatDate={(value) => value}
         onRevoke={async () => {}}
       />
@@ -87,7 +99,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Use the published ApiKeysSettings component from @avgeek-oss/design-system/patterns/account-settings/api-keys-settings. The examples use the actual export with local sample data and callbacks; applications own routing, permissions and persistence.",
+          "Use the published ApiKeysSettings component from @avgeek-oss/design-system/patterns/account-settings/api-keys-settings. Keys carry a role ceiling (the key acts with the lower of it and the owner's role), an optional workspace and an expiry, and rotate with a grace period. Applications own the requests; ConnectedApiKeysSettings does them with an AuthClient.",
       },
     },
   },

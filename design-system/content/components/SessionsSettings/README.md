@@ -1,9 +1,9 @@
 # SessionsSettings
 
-Signed-in browser sessions with per-session revoke.
+Signed-in browsers and devices, with Sign out per session and Sign out everywhere.
 
-**Use for** the Sessions section of account security. The current session can't be revoked here.
+**Use for** the Sessions page of account settings.
 
-**Provide** `items` (`id`, `name`, `lastActive`, `expiresAt`, `current`), `formatDate`, awaited `onRevoke(id)`.
+**Provide** `items` (`id`, `name`, optional `detail` and `signedInAt`, `lastActive`, `expiresAt`, `current`), `formatDate`, awaited `onSignOutCurrent`, optional `onSignOut(id)` and `onSignOutEverywhere`.
 
-**Don't** change the confirmation copy; report failures as one danger toast.
+**Don't** show actions the backend can't do; omit their callbacks. `ConnectedAccountSettings` loads the sessions from the auth client and supplies all three.

@@ -6,3 +6,8 @@ allowBuilds:
 overrides:
   "undici@>=8.0.0 <8.12.2": 8.12.3
   "fast-uri@>=3.0.0 <3.1.9": 3.1.9
+
+# First-party packages, released by this organisation's own verified CI, are
+# installable as soon as they are published.
+minimumReleaseAgeExclude:
+  - "@avgeek-oss/auth-client"

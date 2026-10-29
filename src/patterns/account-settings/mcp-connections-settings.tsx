@@ -34,16 +34,16 @@ export function McpConnectionsSettings<T extends AuthorizedClient>({
               setRevoking(client);
             }}
           >
-            Revoke
+            Disconnect
           </Button>
         )}
       />
       {revoking ? (
         <ActionConfirmation
           isOpen
-          title={`Revoke ${mcpClientPresentation(revoking.client).name}?`}
-          description="This app will lose access immediately. Sign in again from the app to reconnect."
-          confirmLabel="Revoke connection"
+          title={`Disconnect ${mcpClientPresentation({ name: revoking.clientName, id: revoking.clientId }).name}?`}
+          description="It loses access at once, with every token it holds. Connect it again from the app to reconnect."
+          confirmLabel="Disconnect"
           onOpenChange={(open) => {
             if (!open) setRevoking(null);
           }}

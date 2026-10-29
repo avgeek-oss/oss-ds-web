@@ -25,14 +25,13 @@
 - Never also show an inline error for the same failed submission. Load failures and access restrictions stay in their own surface.
 - Don't replace a page with a loading screen when existing data is available.
 - Mount one `Toast.Provider` with `placement="bottom"` across authenticated and public routes.
-- Name limits: identity and team names 1–120 characters, trimmed; email ≤ 320; new passwords 15–1024.
+- Name limits: identity and team names 1–120 characters, trimmed; email ≤ 320; API key names ≤ 100.
 
 ## Auth and settings
 
-- Show the verification-email recovery on `SignIn` only for a rejected `EMAIL_NOT_VERIFIED` code, and only with `onResendVerification`.
-- Omit `onForgotPassword`, `onResendVerification` or `onPasskeySignIn` only when the backend lacks that capability.
+- `SignIn` shows the callback's redirect error above the button; `authRedirectErrorMessage` gives the copy for every code.
 - Use `BrandLockup` with a 32px mark on every auth screen. Don't override auth button or `AuthAction` styling.
-- `ActionConfirmation` takes concrete `confirmLabel` and `cancelLabel`, such as Revoke session and Keep session.
+- `ActionConfirmation` takes concrete `confirmLabel` and `cancelLabel`, such as Sign out and Keep signed in.
 
 ## Notifications and charts
 
@@ -46,4 +45,4 @@
 - `FileUpload` handles one file at a time and uploads on selection. Defaults: images and PDF, 10 MiB.
 - Pass supported types, `maxSizeBytes`, a `description` and `isDisabled`.
 - `onUpload` resolves only after the upload and save succeed. Failures show one toast with Retry upload.
-- Copy actions (`CodeBlock`, `RecoveryCodes`) report one toast per attempt and keep the content selectable.
+- Copy actions (`CodeBlock`) report one toast per attempt and keep the content selectable.

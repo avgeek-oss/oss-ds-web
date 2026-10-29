@@ -13,16 +13,6 @@ const contracts = [
     failure:
       "Could not copy to the clipboard. Select and copy the text instead.",
   },
-  {
-    name: "RecoveryCodes",
-    fixture: "stories/Patterns/Auth/RecoveryCodesScreen.stories.tsx",
-    action: "Copy codes",
-    label: "Copy codes",
-    content: '[aria-label="Recovery codes"]',
-    value: "demo-0001-preview",
-    success: "Recovery codes copied",
-    failure: "Could not copy recovery codes",
-  },
 ];
 
 async function holdClipboard(page) {
@@ -141,7 +131,7 @@ for (const contract of contracts) {
       await page.goto(
         fixtureUrl(
           "stories/Primitives/Overlays/OverlaySuspensionScope.stories.tsx",
-          contract.name === "Passkey" ? "Master" : contract.name,
+          contract.name,
         ),
       );
       await page.bringToFront();

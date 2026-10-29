@@ -1,9 +1,9 @@
 # McpAuthorization
 
-The shared MCP client consent form: application, scope picker and Deny/Approve.
+The MCP consent screen: the client, where it returns to, what it acts on, a role ceiling and Deny/Approve.
 
-**Use for** an MCP client requesting access through the app's OAuth flow. Requests start at Read-only. The preview's mark is a stand-in.
+**Use for** an MCP client asking for access through the app's OAuth server. Ceilings above the person's own role are disabled; a loopback redirect shows a warning. The preview's mark is a stand-in.
 
-**Provide** `brand`, `productName`, `clientName`, controlled `accessLevel`, `availableAccessLevels`, `onAccessLevelChange`, `onApprove`, `onDeny`.
+**Provide** `brand`, `productName`, `client` (`name`, `redirectHost`, `localhost`, optional `logo`/`logoUri`), `resources`, controlled `ceiling`, `ceilings`, `onCeilingChange`, optional `workspace`, `onApprove`, `onDeny`.
 
-**Don't** show OAuth metadata, expiry or raw permission lists in the form.
+**Don't** show raw scopes or OAuth metadata. `ConnectedMcpConsent` loads the request and sends the decision.

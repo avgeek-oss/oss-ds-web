@@ -11,8 +11,8 @@ test("catalogue source includes real composition and sample callbacks, rather th
   // the built docs by test/browser/storybook.spec.mjs; these two stories
   // cover sample callbacks and local preview components.
   for (const file of [
-    "stories/Patterns/Account Settings/ProfileSettings.stories.tsx",
-    "stories/Patterns/Team Settings/RemoveMemberDialog.stories.tsx",
+    "stories/Patterns/Team Settings/TeamGeneralSettings.stories.tsx",
+    "stories/Patterns/Auth/StepUpDialog.stories.tsx",
   ]) {
     const id = path.resolve(file);
     const transformed = transform(readFileSync(id, "utf8"), id);
@@ -52,9 +52,9 @@ test("catalogue source includes real composition and sample callbacks, rather th
     }
     const first = examples[0];
     assert.ok(first);
-    if (file.includes("ProfileSettings"))
-      assert.match(first, /setName\(value\)/);
-    if (file.includes("RemoveMemberDialog"))
-      assert.match(first, /function RemoveMemberDialogPreview/);
+    if (file.includes("TeamGeneralSettings"))
+      assert.match(first, /setValue\(name\)/);
+    if (file.includes("StepUpDialog"))
+      assert.match(first, /function StepUpPreview/);
   }
 });

@@ -5,33 +5,18 @@ import { act, StrictMode, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { OperationProgress } from "../src/patterns/operations/operation-progress.js";
 import { AuthForm } from "../src/patterns/auth/auth-form.js";
-import { EmailChangeSettings } from "../src/patterns/account-settings/email-change-settings.js";
 import { AsyncActionButton } from "../src/patterns/actions/async-action-button.js";
 import { ActionConfirmation } from "../src/patterns/actions/action-confirmation.js";
-import { PasswordChangeSettings } from "../src/patterns/account-settings/password-change-settings.js";
+import { PeopleDirectory } from "../src/patterns/team-settings/people-directory.js";
+import { WorkspaceMembersSettings } from "../src/patterns/team-settings/workspace-members-settings.js";
 import { CreateApiKeyDialog } from "../src/patterns/account-settings/create-api-key-dialog.js";
-import { InviteMemberDialog } from "../src/patterns/team-settings/invite-member-dialog.js";
 import { NotificationDestinationsSettings } from "../src/patterns/notification-settings/notification-destinations-settings.js";
 import { FilterDialog } from "../src/patterns/filters/filter-dialog.js";
 import { toast } from "../src/overlays/toast.js";
-import { IdentityCredentialsForm } from "../src/patterns/auth/identity-credentials-form.js";
 import { McpAuthorization } from "../src/patterns/auth/mcp-authorization.js";
 
 import { NameSettingsForm } from "../src/patterns/settings/name-form.js";
-import { EmailConfirmation } from "../src/patterns/auth/email-confirmation.js";
-import { InvitationVerification } from "../src/patterns/auth/invitation-verification.js";
-import { VerificationEmail } from "../src/patterns/auth/verification-email.js";
-import { SignIn } from "../src/patterns/auth/sign-in.js";
-import { InvitationPasswordSetup } from "../src/patterns/auth/invitation-password-setup.js";
-import { PasskeyRecoveryVerification } from "../src/patterns/auth/passkey-recovery-verification.js";
-import { PasskeyVerification } from "../src/patterns/auth/passkey-verification.js";
-import { ConfirmIdentityDialog } from "../src/patterns/auth/confirm-identity-dialog.js";
-import { PasskeySettings } from "../src/patterns/account-settings/passkey-settings.js";
-import { MemberEditDialog } from "../src/patterns/team-settings/member-edit-dialog.js";
 import { TeamGeneralSettings } from "../src/patterns/team-settings/team-general-settings.js";
-import { MembersTable } from "../src/patterns/team-settings/members-table.js";
-import { InvitationsTable } from "../src/patterns/team-settings/invitations-table.js";
-import { RecoveryCodes } from "../src/patterns/auth/recovery-codes.js";
 import { CodeBlock } from "../src/typography/code-block.js";
 
 import { ResourceTable } from "../src/patterns/resource-table.js";
@@ -108,12 +93,16 @@ async function fill(name: string, value: string) {
     input.dispatchEvent(new Event("input", { bubbles: true }));
   });
 }
+// Options are named by their label, or their label then description.
+const optionNamed = (option: HTMLOptionElement, label: string) =>
+  option.textContent === label ||
+  (option.textContent ?? "").startsWith(`${label} `);
 async function chooseKeyOption(label: string) {
   const select = [...document.querySelectorAll("select")].find((element) =>
-    [...element.options].some((option) => option.textContent === label),
+    [...element.options].some((option) => optionNamed(option, label)),
   );
   assert.ok(select, `Missing selection option: ${label}`);
-  const option = [...select.options].find((item) => item.textContent === label);
+  const option = [...select.options].find((item) => optionNamed(item, label));
   assert.ok(option);
   await act(async () => {
     select.value = option.value;
@@ -207,36 +196,6 @@ test("confirmation stays open during requests and after failure, then closes on 
   }
 });
 
-test("password mismatch never reaches the callback and successful changes clear credentials", async () => {
-  let calls = 0;
-  const view = await mount(
-    <PasswordChangeSettings
-      requireCurrentPassword={false}
-      onChangePassword={async (values) => {
-        calls++;
-        assert.equal(values.newPassword, "a long secure password");
-        assert.equal(values.currentPassword, undefined);
-      }}
-    />,
-  );
-  try {
-    await fill("newPassword", "a long secure password");
-    await fill("confirmPassword", "another long password");
-    await submit();
-    assert.equal(calls, 0);
-    await fill("confirmPassword", "a long secure password");
-    await submit();
-    assert.equal(calls, 1);
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="newPassword"]')
-        ?.value,
-      "",
-    );
-  } finally {
-    await view.unmount();
-  }
-});
-
 test("API key creation retains the name on failure and removes the revealed secret on close", async () => {
   let calls = 0;
   function Example() {
@@ -245,18 +204,18 @@ test("API key creation retains the name on failure and removes the revealed secr
       <CreateApiKeyDialog
         isOpen={isOpen}
         onOpenChange={setOpen}
-        permissionOptions={[{ id: "read", label: "Read-only" }]}
+        ceilings={["viewer"]}
         expiryOptions={[{ id: "90", label: "90 days" }]}
         onCreate={async (values) => {
           calls++;
-          assert.equal(values.permission.toUpperCase(), "READ");
           assert.deepEqual(values, {
             name: "Automation",
-            permission: "read",
-            expiry: "90",
+            ceiling: "viewer",
+            workspace: null,
+            expiresInSeconds: 90 * 86_400,
           });
           if (calls === 1) throw new Error("Creation failed");
-          return { token: "preview-secret" };
+          return { key: "preview-secret" };
         }}
       />
     );
@@ -264,7 +223,7 @@ test("API key creation retains the name on failure and removes the revealed secr
   const view = await mount(<Example />);
   try {
     await fill("name", "Automation");
-    await chooseKeyOption("Read-only");
+    await chooseKeyOption("Viewer");
     await chooseKeyOption("90 days");
     await submit();
     assertFailureToast("Creation failed");
@@ -277,45 +236,6 @@ test("API key creation retains the name on failure and removes the revealed secr
     assert.equal(document.activeElement?.textContent, "Done");
     await click(button("Done"));
     assert.doesNotMatch(document.body.textContent ?? "", /preview-secret/);
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("invitation link appears only after success and failed invitations retain the email", async () => {
-  let calls = 0;
-  const view = await mount(
-    <InviteMemberDialog
-      isOpen
-      onOpenChange={() => {}}
-      roles={[{ id: "member", label: "Member" }]}
-      resultGuidance={<p>Email delivery is not configured.</p>}
-      onInvite={async (values) => {
-        calls++;
-        assert.deepEqual(values, { email: "sam@example.test", role: "member" });
-        if (calls === 1) throw new Error("Invitation failed");
-        return { inviteUrl: "https://example.test/invite/new" };
-      }}
-    />,
-  );
-  try {
-    await fill("email", "sam@example.test");
-    await submit();
-    assertFailureToast("Invitation failed");
-    assert.doesNotMatch(document.body.textContent ?? "", /Invitation created/);
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="email"]')?.value,
-      "sam@example.test",
-    );
-    await submit();
-    assert.match(
-      document.body.textContent ?? "",
-      /Share this private invitation link/,
-    );
-    assert.match(
-      document.body.textContent ?? "",
-      /https:\/\/example.test\/invite\/new/,
-    );
   } finally {
     await view.unmount();
   }
@@ -454,36 +374,21 @@ test("form rejection keeps the draft and reports one toast without inline duplic
   }
 });
 
-test("credential submission errors use toasts even with inline field validation", async () => {
-  const view = await mount(
-    <IdentityCredentialsForm
-      errorPresentation="inline"
-      onSubmit={async () => {
-        throw new Error("Sign in request failed");
-      }}
-    />,
-  );
-  try {
-    await fill("identifier", "alex");
-    await fill("password", "preview password");
-    await submit();
-    assertFailureToast("Sign in request failed");
-    assert.equal(button("Sign in").disabled, false);
-  } finally {
-    await view.unmount();
-  }
-});
-
+const consentClient = {
+  name: "Example client",
+  redirectHost: "client.example.test",
+  localhost: false,
+};
 test("authorization reports changed submission failures once while preserving policy notices", async () => {
   const render = (error?: string) => (
     <StrictMode>
       <McpAuthorization
         brand="Avgeek"
         productName="Example"
-        clientName="Example client"
-        accessLevel="read"
-        availableAccessLevels={["read"]}
-        onAccessLevelChange={() => {}}
+        client={consentClient}
+        ceiling="viewer"
+        ceilings={["viewer"]}
+        onCeilingChange={() => {}}
         error={error}
         approvalBlockedReason="Your role cannot grant access."
         onApprove={() => {}}
@@ -504,38 +409,6 @@ test("authorization reports changed submission failures once while preserving po
     await view.render(render());
     await view.render(render("Authorization failed"));
     assertFailureToast("Authorization failed");
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("email verification respects an app-provided resend cooldown", async () => {
-  let calls = 0;
-  const view = await mount(
-    <EmailChangeSettings
-      email="alex@example.test"
-      isVerified={false}
-      resendAvailableAt={Date.now() + 60000}
-      onRequestChange={async () => {}}
-      onCancelChange={async () => {}}
-      onResendVerification={async () => {
-        calls++;
-      }}
-    />,
-  );
-  try {
-    const trigger = document.querySelector(
-      '[aria-label="Unverified email. Resend confirmation email"]',
-    );
-    assert.ok(trigger);
-    await click(trigger);
-    const resend = [...document.querySelectorAll("button")].find((item) =>
-      item.textContent?.startsWith("Resend in"),
-    );
-    assert.ok(resend);
-    assert.equal(resend.disabled, true);
-    await click(resend);
-    assert.equal(calls, 0);
   } finally {
     await view.unmount();
   }
@@ -581,295 +454,160 @@ test("operation failures expand initially, remain collapsible, and waiting steps
   }
 });
 
-test("external sign-in pending blocks all submit paths and preserves the credentials", async () => {
-  let calls = 0;
-  const props = {
-    brand: "Example",
-    onSubmit: async () => {
-      calls++;
-    },
-    onForgotPassword: () => {
-      calls++;
-    },
-    onPasskeySignIn: () => {
-      calls++;
-    },
-    onResendVerification: () => {
-      calls++;
-    },
-  };
-  const view = await mount(<SignIn {...props} />);
-  try {
-    await fill("identifier", "alex@example.test");
-    await fill("password", "preview password");
-    assert.doesNotMatch(
-      document.body.textContent ?? "",
-      /Need a new verification email/,
-    );
-    await view.render(<SignIn {...props} isPending />);
-    for (const label of [
-      "Signing in…",
-      "Forgot password?",
-      "Sign in with Passkey",
-    ]) {
-      assert.equal(button(label).disabled, true);
-      await click(button(label));
-    }
-    await submit();
-    assert.equal(calls, 0);
-    await view.render(<SignIn {...props} />);
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="password"]')?.value,
-      "preview password",
-    );
-    await submit();
-    assert.equal(calls, 1);
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="password"]')?.value,
-      "",
-    );
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("passkey verification exposes only supported fallbacks and keeps cancellation available", async () => {
-  let cancels = 0;
-  let fallback = 0;
-  const props = {
-    brand: "Example",
-    onRetry: () => {},
-    onCancelRequest: () => {
-      cancels++;
-    },
-    onBackToSignIn: () => {},
-  };
-  const view = await mount(<PasskeyVerification {...props} />);
-  try {
-    assert.doesNotMatch(
-      document.body.textContent ?? "",
-      /Use a recovery code|Use an authenticator code/,
-    );
-    await view.render(
-      <PasskeyVerification
-        {...props}
-        isPending
-        onRecoverySignIn={() => {
-          fallback++;
-        }}
-        onAuthenticatorSignIn={() => {
-          fallback++;
-        }}
-      />,
-    );
-    assert.equal(button("Use a recovery code").disabled, true);
-    assert.equal(button("Use an authenticator code").disabled, true);
-    await click(button("Cancel passkey request"));
-    assert.equal(cancels, 1);
-    assert.equal(fallback, 0);
-    await view.render(
-      <PasskeyVerification
-        {...props}
-        onRecoverySignIn={() => {
-          fallback++;
-        }}
-      />,
-    );
-    await click(button("Use a recovery code"));
-    assert.equal(fallback, 1);
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("custom identity verification supports app-owned ceremonies and explicit abort dismissal", async () => {
-  let closes = 0;
-  const props = {
-    isOpen: true,
-    onOpenChange: (open: boolean) => {
-      if (!open) closes++;
-    },
-  };
-  const view = await mount(
-    <ConfirmIdentityDialog {...props} method="custom" isPending>
-      <p>Waiting for identity verification</p>
-    </ConfirmIdentityDialog>,
-  );
-  try {
-    assert.equal(document.querySelector('input[type="password"]'), null);
-    assert.equal(button("Cancel").disabled, true);
-    await view.render(
-      <ConfirmIdentityDialog
-        {...props}
-        method="custom"
-        isPending
-        isDismissDisabled={false}
-      >
-        <p>Waiting for passkey verification</p>
-      </ConfirmIdentityDialog>,
-    );
-    await click(button("Cancel"));
-    assert.equal(closes, 1);
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("API keys require explicit permission and expiry selections before submitting", async () => {
-  let calls = 0;
+test("API keys require an explicit role and expiry, offer only roles up to the person's own, and send workspaces", async () => {
+  const submitted: unknown[] = [];
   const view = await mount(
     <CreateApiKeyDialog
       isOpen
       onOpenChange={() => {}}
+      ceilings={["viewer", "member"]}
+      workspaces={[{ id: "ops", label: "Operations" }]}
       onCreate={async (values) => {
-        calls++;
-        assert.deepEqual(values, {
-          name: "Automation",
-          permission: "read",
-          expiry: "never",
-        });
-        return { token: "preview-key" };
+        submitted.push(values);
+        return { key: "preview-key" };
       }}
     />,
   );
   try {
-    assert.match(document.body.textContent ?? "", /Permissions/);
+    const roles = [...document.querySelectorAll("select")]
+      .flatMap((select) => [...select.options])
+      .map((option) => option.textContent);
+    assert.ok(roles.some((label) => label?.startsWith("Member")));
+    assert.ok(!roles.some((label) => label?.startsWith("Admin")));
     await fill("name", "Automation");
     await submit();
-    assert.equal(calls, 0);
+    assert.equal(submitted.length, 0);
     assert.equal(button("Create key").disabled, true);
-    await chooseKeyOption("Read-only");
+    await chooseKeyOption("Member");
     await submit();
-    assert.equal(calls, 0);
+    assert.equal(submitted.length, 0);
     await chooseKeyOption("Never");
+    await chooseKeyOption("Operations");
     assert.equal(button("Create key").disabled, false);
     await submit();
-    assert.equal(calls, 1);
+    assert.deepEqual(submitted, [
+      {
+        name: "Automation",
+        ceiling: "member",
+        workspace: "ops",
+        expiresInSeconds: null,
+      },
+    ]);
     assert.match(document.body.textContent ?? "", /preview-key/);
   } finally {
     await view.unmount();
   }
 });
 
-test("read-only email settings expose identity without invented change or resend capabilities", async () => {
+test("a create that the app takes over, such as for step-up, closes without a secret or toast", async () => {
+  const changes: boolean[] = [];
   const view = await mount(
-    <EmailChangeSettings
-      email="alex@example.test"
-      isVerified={false}
-      mode="read-only"
-    >
-      <p>Managed by your instance administrator.</p>
-    </EmailChangeSettings>,
-  );
-  try {
-    assert.equal(document.querySelector("form"), null);
-    assert.equal(document.querySelector("button"), null);
-    const input = document.querySelector<HTMLInputElement>(
-      'input[type="email"]',
-    );
-    assert.equal(input?.readOnly, true);
-    assert.equal(input?.value, "alex@example.test");
-    assert.match(
-      document.body.textContent ?? "",
-      /Unverified|Managed by your instance administrator/,
-    );
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("passkey settings omit unsupported rename and recovery actions", async () => {
-  const view = await mount(
-    <PasskeySettings
-      items={[
-        { id: "key", name: "Security key", createdAt: "2026-10-06T00:00:00Z" },
-      ]}
-      formatDate={() => "Today"}
-      onAdd={async () => {}}
-      onRemove={async () => {}}
-    />,
-  );
-  try {
-    assert.equal(button("Add passkey").disabled, false);
-    assert.equal(button("Remove").disabled, false);
-    assert.doesNotMatch(
-      document.body.textContent ?? "",
-      /Rename|Replace recovery codes/,
-    );
-    assert.equal(document.querySelector('[aria-label="More actions"]'), null);
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("role-only member edits cannot mutate identity fields and retain the role draft on rejection", async () => {
-  let calls = 0;
-  const view = await mount(
-    <MemberEditDialog
+    <CreateApiKeyDialog
       isOpen
-      mode="role-only"
-      member={{
-        id: "alex",
-        name: "Alex",
-        email: "alex@example.test",
-        role: "member",
-      }}
-      roles={[{ id: "member", label: "Member" }]}
-      onOpenChange={() => {}}
-      onSave={async (values) => {
-        calls++;
-        assert.deepEqual(values, { role: "member" });
-        if (calls === 1) throw new Error("Role update failed");
-      }}
+      onOpenChange={(open) => changes.push(open)}
+      ceilings={["admin"]}
+      onCreate={async () => undefined}
     />,
   );
   try {
-    assert.equal(document.querySelector('input[name="name"]'), null);
+    await fill("name", "Admin key");
+    await chooseKeyOption("Admin");
+    await chooseKeyOption("Never");
     await submit();
-    assertFailureToast("Role update failed");
-    assert.ok(document.querySelector('[role="dialog"]'));
-    await submit();
-    assert.equal(calls, 2);
+    assert.deepEqual(changes, [false]);
+    assert.deepEqual(dangerMessages, []);
+    assert.doesNotMatch(document.body.textContent ?? "", /Copy your API key/);
   } finally {
     await view.unmount();
   }
 });
 
-test("invitations display avatar identity and members identify the current user without altering records", async () => {
-  const invitation = await mount(
-    <InvitationsTable
-      items={[
-        {
-          id: "invite",
-          email: "sam@example.test",
-          name: "Sam",
-          role: "member",
-          expiresAt: "2026-10-07T00:00:00Z",
-        },
-      ]}
-      roles={[{ id: "member", label: "Member" }]}
-      formatDate={() => "Tomorrow"}
-    />,
-  );
-  try {
-    assert.ok(document.querySelector('[role="img"][aria-label="Sam"]'));
-  } finally {
-    await invitation.unmount();
-  }
-  const member = {
+test("the people directory is read-only, marks suspended and deactivated people and identifies the current user", async () => {
+  const person = {
     id: "alex",
     name: "Alex",
     email: "alex@example.test",
-    role: "member",
+    role: "member" as const,
+    roleSource: "scim" as const,
+    lastSignInAt: null,
   };
-  const members = await mount(
-    <MembersTable items={[member]} currentUserId="alex" actions={() => null} />,
+  const view = await mount(
+    <PeopleDirectory
+      items={[
+        person,
+        { ...person, id: "lee", name: "Lee", role: null },
+        { ...person, id: "kim", name: "Kim", status: "deactivated" as const },
+      ]}
+      providerName="authentik"
+      currentUserId="alex"
+      formatDate={() => "Yesterday"}
+    />,
   );
   try {
-    assert.match(document.body.textContent ?? "", /Alex \(you\)/);
-    assert.equal(member.name, "Alex");
+    const text = document.body.textContent ?? "";
+    assert.match(text, /Alex \(you\)/);
+    assert.equal(person.name, "Alex");
+    assert.match(text, /Suspended/);
+    assert.match(text, /Deactivated/);
+    assert.match(text, /Access is managed in authentik/);
+    assert.match(text, /SCIM/);
+    assert.match(text, /Never/);
+    assert.equal(document.querySelectorAll("button, select, input").length, 0);
   } finally {
-    await members.unmount();
+    await view.unmount();
+  }
+});
+
+test("workspace members can be added from the directory, never suspended people, and removal is confirmed", async () => {
+  const calls: string[] = [];
+  const person = (id: string, role: "member" | null = "member") => ({
+    id,
+    name: id,
+    email: `${id}@example.test`,
+    role,
+    lastSignInAt: null,
+  });
+  const view = await mount(
+    <WorkspaceMembersSettings
+      workspaceName="Operations"
+      providerName="authentik"
+      members={[person("ada")]}
+      people={[person("ada"), person("sam"), person("lee", null)]}
+      formatDate={(value) => value}
+      onAdd={async (id) => {
+        calls.push(`add ${id}`);
+      }}
+      onRemove={async (id) => {
+        calls.push(`remove ${id}`);
+      }}
+    />,
+  );
+  try {
+    await click(button("Add people"));
+    const options = [...document.querySelectorAll("select")]
+      .flatMap((select) => [...select.options])
+      .map((option) => option.textContent);
+    assert.ok(options.some((label) => label?.startsWith("sam")));
+    assert.ok(!options.some((label) => label?.startsWith("lee")));
+    assert.ok(!options.some((label) => label?.startsWith("ada")));
+    await chooseKeyOption(
+      options.find((label) => label?.startsWith("sam")) ?? "sam",
+    );
+    await click(button("Add"));
+    assert.deepEqual(calls, ["add sam"]);
+    await click(button("Remove"));
+    assert.match(
+      document.body.textContent ?? "",
+      /Remove ada from Operations\?/,
+    );
+    assert.deepEqual(calls, ["add sam"]);
+    const confirm = [...document.querySelectorAll("button")].filter(
+      (item) => item.textContent?.trim() === "Remove",
+    );
+    await click(confirm.at(-1) ?? button("Remove"));
+    assert.deepEqual(calls, ["add sam", "remove ada"]);
+  } finally {
+    await view.unmount();
   }
 });
 
@@ -925,10 +663,10 @@ test("disabled authorization decisions cannot replay a consumed request and do n
       brand="Example"
       productName="Example"
       isDisabled
-      clientName="Client"
-      accessLevel="read"
-      availableAccessLevels={["read"]}
-      onAccessLevelChange={() => {}}
+      client={consentClient}
+      ceiling="viewer"
+      ceilings={["viewer"]}
+      onCeilingChange={() => {}}
       onApprove={() => {
         calls++;
       }}
@@ -1013,17 +751,6 @@ for (const contract of [
     label: "Copy",
     value: "private-key",
   },
-  {
-    name: "RecoveryCodes",
-    element: (
-      <RecoveryCodes
-        codes={["first-code", "second-code"]}
-        onContinue={() => {}}
-      />
-    ),
-    label: "Copy codes",
-    value: "first-code\nsecond-code\n",
-  },
 ]) {
   test(`${contract.name} copying locks same-frame presses until the clipboard settles and unlocks after rejection`, async () => {
     const successes: ReactNode[] = [];
@@ -1105,21 +832,23 @@ test("API key names reject whitespace with toast and focus, retain the draft, an
     <CreateApiKeyDialog
       isOpen
       onOpenChange={() => {}}
+      ceilings={["viewer"]}
       expiryOptions={[{ id: "90", label: "90 days" }]}
       onCreate={async (values) => {
         calls++;
         assert.deepEqual(values, {
           name: "Automation",
-          permission: "read",
-          expiry: "90",
+          ceiling: "viewer",
+          workspace: null,
+          expiresInSeconds: 90 * 86_400,
         });
         await pending.promise;
-        return { token: "preview-key" };
+        return { key: "preview-key" };
       }}
     />,
   );
   try {
-    await chooseKeyOption("Read-only");
+    await chooseKeyOption("Viewer");
     await chooseKeyOption("90 days");
     await fill("name", "   ");
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -1150,121 +879,6 @@ test("API key names reject whitespace with toast and focus, retain the draft, an
     assert.equal(calls, 1);
     await act(async () => pending.resolve());
     assert.match(document.body.textContent ?? "", /preview-key/);
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("passkey identity cancellation aborts before dismissal and retains the single pending attempt", async () => {
-  const events: string[] = [];
-  let finish!: () => void;
-  let attempts = 0;
-  const view = await mount(
-    <ConfirmIdentityDialog
-      isOpen
-      method="passkey"
-      onOpenChange={(open) => {
-        if (!open) events.push("close");
-      }}
-      onCancelRequest={() => {
-        events.push("abort");
-      }}
-      onConfirm={async () => {
-        attempts++;
-        await new Promise<void>((resolve) => {
-          finish = resolve;
-        });
-      }}
-    />,
-  );
-  try {
-    const dialog = document.querySelector('[role="dialog"]');
-    const description = document.getElementById(
-      dialog?.getAttribute("aria-describedby") ?? "",
-    );
-    assert.equal(
-      description?.textContent,
-      "Authenticate yourself using your passkey to confirm and obtain required access.",
-    );
-    await click(button("Use Passkey"));
-    assert.equal(button("Cancel").disabled, false);
-    await click(button("Use Passkey"));
-    assert.equal(attempts, 1);
-    await click(button("Cancel"));
-    assert.deepEqual(events, ["abort", "close"]);
-    await act(async () => finish());
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("invitation password setup validates confirmation and preserves the draft after rejection", async () => {
-  let attempts = 0;
-  const view = await mount(
-    <InvitationPasswordSetup
-      brand="Example"
-      teamName="Example team"
-      email="alex@example.test"
-      role="Member"
-      onBackToSignIn={() => {}}
-      onSubmit={async (values) => {
-        attempts++;
-        assert.deepEqual(values, {
-          name: "Alex",
-          password: "long preview passphrase",
-        });
-        throw new Error("Invitation is unavailable");
-      }}
-    />,
-  );
-  try {
-    await fill("name", "Alex");
-    await fill("password", "long preview passphrase");
-    await fill("confirmPassword", "another preview passphrase");
-    await submit();
-    assert.equal(attempts, 0);
-    assertFailureToast("Passwords do not match");
-    dangerMessages = [];
-    await fill("confirmPassword", "long preview passphrase");
-    await submit();
-    assert.equal(attempts, 1);
-    assertFailureToast("Invitation is unavailable");
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="name"]')?.value,
-      "Alex",
-    );
-    assert.equal(button("Create account and join").disabled, false);
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("passkey recovery completes an existing sign-in without collecting credentials again", async () => {
-  let attempts = 0;
-  const view = await mount(
-    <PasskeyRecoveryVerification
-      brand="Example"
-      onPasskeyVerification={() => {}}
-      onBackToSignIn={() => {}}
-      onSubmit={async ({ code }) => {
-        assert.equal(code, "preview-once-code");
-        attempts++;
-        throw new Error("Recovery code has already been used");
-      }}
-    />,
-  );
-  try {
-    assert.equal(document.querySelector('input[type="password"]'), null);
-    assert.equal(document.querySelector('input[type="email"]'), null);
-    await fill("code", "preview-once-code");
-    await submit();
-    assert.equal(attempts, 1);
-    assertFailureToast("Recovery code has already been used");
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="code"]')?.value,
-      "preview-once-code",
-    );
-    assert.equal(button("Sign in").disabled, false);
   } finally {
     await view.unmount();
   }
@@ -1369,391 +983,6 @@ test("stacked resource tables keep one native row, every field and one action pe
     assert.match(
       document.querySelector('[role="gridcell"]')?.textContent ?? "",
       /Read only/,
-    );
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("passkey verification permits cancellation only while an abort callback is available", async () => {
-  const view = await mount(
-    <PasskeyVerification
-      brand="Example"
-      isPending
-      onRetry={() => {}}
-      onBackToSignIn={() => {}}
-    />,
-  );
-  try {
-    assert.equal(
-      [...document.querySelectorAll("button")].some(
-        (item) => item.textContent === "Cancel passkey request",
-      ),
-      false,
-    );
-    assert.equal(button("← Back to Sign In").disabled, true);
-    await view.render(
-      <PasskeyVerification
-        brand="Example"
-        isPending
-        onRetry={() => {}}
-        onBackToSignIn={() => {}}
-        onCancelRequest={() => {}}
-      />,
-    );
-    assert.equal(button("Cancel passkey request").disabled, false);
-    assert.equal(button("← Back to Sign In").disabled, false);
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("verification requests lock navigation, retain failed drafts and acknowledge without account disclosure", async () => {
-  const pending = deferred();
-  let calls = 0;
-  let back = 0;
-  const view = await mount(
-    <VerificationEmail
-      brand="Example"
-      onBackToSignIn={() => {
-        back++;
-      }}
-      onSubmit={async ({ email }) => {
-        assert.equal(email, "alex@example.test");
-        calls++;
-        if (calls === 1) {
-          await pending.promise;
-          throw new Error("Verification request failed");
-        }
-      }}
-    />,
-  );
-  try {
-    await fill("email", "alex@example.test");
-    await submit();
-    await submit();
-    assert.equal(calls, 1);
-    assert.equal(button("Sending…").disabled, true);
-    assert.equal(button("← Back to Sign In").disabled, true);
-    await click(button("← Back to Sign In"));
-    assert.equal(back, 0);
-    await act(async () => pending.resolve());
-    assertFailureToast("Verification request failed");
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="email"]')?.value,
-      "alex@example.test",
-    );
-    assert.equal(button("← Back to Sign In").disabled, false);
-    await submit();
-    assert.equal(calls, 2);
-    assert.equal(document.querySelector("form"), null);
-    assert.match(
-      document.body.textContent ?? "",
-      /If an account needs email verification/,
-    );
-    assert.equal(
-      document.activeElement?.textContent?.includes("Verify your email"),
-      true,
-    );
-    await click(button("Request another link"));
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="email"]')?.value,
-      "alex@example.test",
-    );
-    await click(button("← Back to Sign In"));
-    assert.equal(back, 1);
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("sign-in blocks verification navigation during its own request and allows retry after failure", async () => {
-  const pending = deferred();
-  let navigations = 0;
-  const view = await mount(
-    <SignIn
-      brand="Example"
-      onForgotPassword={() => {
-        navigations++;
-      }}
-      onResendVerification={() => {
-        navigations++;
-      }}
-      onPasskeySignIn={() => {
-        navigations++;
-      }}
-      onSubmit={async () => {
-        await pending.promise;
-        throw Object.assign(new Error("Verify your email to sign in."), {
-          code: "EMAIL_NOT_VERIFIED",
-        });
-      }}
-    />,
-  );
-  try {
-    await fill("identifier", "alex@example.test");
-    await fill("password", "preview password");
-    await submit();
-    for (const label of ["Forgot password?", "Sign in with Passkey"]) {
-      assert.equal(button(label).disabled, true);
-      await click(button(label));
-    }
-    assert.equal(navigations, 0);
-    await act(async () => pending.resolve());
-    assertFailureToast("Verify your email to sign in.");
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="password"]')?.value,
-      "",
-    );
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="identifier"]')
-        ?.value,
-      "alex@example.test",
-    );
-    await fill("password", "another password");
-    await act(async () => window.dispatchEvent(new Event("pagehide")));
-    assert.equal(
-      document.querySelector<HTMLInputElement>('input[name="password"]')?.value,
-      "",
-    );
-    await click(button("Need a new verification email?"));
-    assert.equal(navigations, 1);
-    await fill("identifier", "another@example.test");
-    assert.doesNotMatch(
-      document.body.textContent ?? "",
-      /Need a new verification email/,
-    );
-  } finally {
-    await view.unmount();
-  }
-});
-
-for (const error of [
-  new Error("Email not verified"),
-  Object.assign(new Error("Email not verified"), {
-    code: "INVALID_EMAIL_OR_PASSWORD",
-  }),
-]) {
-  test(`sign-in ignores verification message text with code ${"code" in error ? String(error.code) : "absent"}`, async () => {
-    const view = await mount(
-      <SignIn
-        brand="Example"
-        onResendVerification={() => {}}
-        onSubmit={async () => {
-          throw error;
-        }}
-      />,
-    );
-    try {
-      await fill("identifier", "alex@example.test");
-      await fill("password", "preview password");
-      await submit();
-      assertFailureToast("Email not verified");
-      assert.doesNotMatch(
-        document.body.textContent ?? "",
-        /Need a new verification email/,
-      );
-    } finally {
-      await view.unmount();
-    }
-  });
-}
-
-test("visible verification recovery respects external pending state", async () => {
-  const props = {
-    brand: "Example",
-    onResendVerification: () => {},
-    onSubmit: async () => {
-      throw Object.assign(new Error("Verify your email"), {
-        code: "EMAIL_NOT_VERIFIED",
-      });
-    },
-  };
-  const view = await mount(<SignIn {...props} />);
-  try {
-    await fill("identifier", "alex@example.test");
-    await fill("password", "preview password");
-    await submit();
-    assert.equal(button("Need a new verification email?").disabled, false);
-    await view.render(<SignIn {...props} isPending />);
-    assert.equal(button("Need a new verification email?").disabled, true);
-  } finally {
-    await view.unmount();
-  }
-});
-
-test("sign-in omits actions whose capabilities are unavailable", async () => {
-  const view = await mount(
-    <SignIn brand="Example" onSubmit={async () => {}} />,
-  );
-  try {
-    assert.doesNotMatch(
-      document.body.textContent ?? "",
-      /Forgot password|Need a new verification email|Sign in with Passkey/,
-    );
-    assert.match(document.body.textContent ?? "", /Sign in to your account/);
-  } finally {
-    await view.unmount();
-  }
-});
-
-for (const purpose of ["verify-email", "email-change"] as const) {
-  test(`email confirmation ${purpose} is explicit, locks pending actions and retains retry after failure`, async () => {
-    const first = deferred();
-    let requests = 0;
-    let back = 0;
-    const successes: ReactNode[] = [];
-    mock.method(toast, "success", (message: ReactNode) => {
-      successes.push(message);
-      return "confirmed";
-    });
-    const common = {
-      brand: "Example",
-      purpose,
-      onBackToSignIn: () => {
-        back++;
-      },
-    };
-    const confirm = async () => {
-      requests++;
-      if (requests === 1) {
-        await first.promise;
-        throw new Error("Confirmation failed");
-      }
-      toast.success("Confirmation completed");
-    };
-    const view = await mount(
-      <EmailConfirmation {...common} status="ready" onConfirm={confirm} />,
-    );
-    try {
-      assert.equal(requests, 0);
-      const action = button(
-        purpose === "email-change" ? "Confirm email change" : "Confirm email",
-      );
-      await act(async () => {
-        action.click();
-        action.click();
-      });
-      assert.equal(requests, 1);
-      assert.equal(action.getAttribute("aria-disabled"), "true");
-      await click(button("← Back to Sign In"));
-      assert.equal(back, 0);
-      assert.equal(dangerMessages.length, 0);
-      await act(async () => first.resolve());
-      assertFailureToast("Confirmation failed");
-      await click(action);
-      assert.equal(requests, 2);
-      assert.deepEqual(successes, ["Confirmation completed"]);
-      await view.render(<EmailConfirmation {...common} status="confirmed" />);
-      assert.match(document.body.textContent ?? "", /Sign in to continue/);
-      assert.doesNotMatch(
-        document.body.textContent ?? "",
-        /Confirmation completed|Email verified|Email updated/,
-      );
-      await view.render(<EmailConfirmation {...common} status="unavailable" />);
-      assert.equal(view.container.querySelectorAll("button").length, 1);
-      await click(button("← Back to Sign In"));
-      assert.equal(back, 1);
-      await view.render(<EmailConfirmation {...common} status="checking" />);
-      assert.equal(button("← Back to Sign In").disabled, true);
-      assert.match(
-        view.container.querySelector('[role="status"]')?.textContent ?? "",
-        /Checking/,
-      );
-      assert.equal(requests, 2);
-    } finally {
-      await view.unmount();
-    }
-  });
-}
-
-test("invitation verification shares its resend lock, retains drafts and respects server cooldown", async () => {
-  const resend = deferred();
-  const verification = deferred();
-  let resends = 0;
-  let submissions = 0;
-  const successes: ReactNode[] = [];
-  mock.method(toast, "success", (message: ReactNode) => {
-    successes.push(message);
-    return "sent";
-  });
-  const props = {
-    brand: "Example",
-    teamName: "Example",
-    onSubmit: async () => {
-      submissions++;
-      await verification.promise;
-      throw new Error("Verification failed");
-    },
-    onResendCode: async () => {
-      resends++;
-      if (resends === 1) {
-        await resend.promise;
-        throw new Error("Resend failed");
-      }
-    },
-  };
-  const view = await mount(<InvitationVerification {...props} />);
-  try {
-    await fill("name", "Alex");
-    await fill("code", "123456");
-    const name = document.querySelector<HTMLInputElement>('[name="name"]');
-    const code = document.querySelector<HTMLInputElement>('[name="code"]');
-    assert.ok(name);
-    assert.ok(code);
-    const resendButton = button("Resend code");
-    await act(async () => {
-      resendButton.click();
-      resendButton.click();
-    });
-    await submit();
-    assert.equal(resends, 1);
-    assert.equal(submissions, 0);
-    assert.equal(dangerMessages.length, 0);
-    assert.equal(name.matches(":disabled"), true);
-    await act(async () => resend.resolve());
-    assertFailureToast("Resend failed");
-    assert.equal(name.value, "Alex");
-    assert.equal(code.value, "123456");
-    await click(resendButton);
-    assert.equal(resends, 2);
-    assert.deepEqual(successes, ["Verification code requested."]);
-    await view.render(
-      <InvitationVerification
-        {...props}
-        resendAvailableAt={Date.now() + 60000}
-      />,
-    );
-    const cooldown = [...view.container.querySelectorAll("button")].find(
-      (item) => item.textContent?.startsWith("Resend in"),
-    );
-    assert.ok(cooldown);
-    assert.equal(cooldown.disabled, true);
-    await click(cooldown);
-    assert.equal(resends, 2);
-    await view.render(
-      <InvitationVerification {...props} resendAvailableAt={0} />,
-    );
-    await submit();
-    await click(button("Resend code"));
-    assert.equal(submissions, 1);
-    assert.equal(resends, 2);
-    await act(async () => verification.resolve());
-    assert.deepEqual(dangerMessages, ["Resend failed", "Verification failed"]);
-    assert.equal(name.value, "Alex");
-    assert.equal(code.value, "123456");
-    assert.doesNotMatch(
-      document.body.textContent ?? "",
-      /Resend failed|Verification failed|Verification code requested/,
-    );
-    await view.render(
-      <InvitationVerification {...props} onResendCode={undefined} />,
-    );
-    assert.equal(
-      [...view.container.querySelectorAll("button")].some((item) =>
-        item.textContent?.includes("Resend"),
-      ),
-      false,
     );
   } finally {
     await view.unmount();

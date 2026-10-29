@@ -2,30 +2,33 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { McpConnectionsSettings } from "../../../src/patterns/account-settings/mcp-connections-settings.js";
 import { SettingsPageTitle } from "../../../src/patterns/settings/page-title.js";
+import type { AuthorizedClient } from "../../../src/patterns/account-settings/api-keys-table.js";
 function Fixture() {
-  const [items, setItems] = useState([
+  const [items, setItems] = useState<AuthorizedClient[]>([
     {
       id: "codex",
-      name: "https://chatgpt.com/oauth/codex/YddBjjAsi-xR/client.json",
-      client: {
-        name: "https://chatgpt.com/oauth/codex/YddBjjAsi-xR/client.json",
-        id: "https://chatgpt.com/oauth/codex/YddBjjAsi-xR/client.json",
-      },
-      permissions: "Administrative permissions",
+      clientId: "https://chatgpt.com/oauth/codex/YddBjjAsi-xR/client.json",
+      clientName: "https://chatgpt.com/oauth/codex/YddBjjAsi-xR/client.json",
+      logoUri: null,
+      ceiling: "admin",
+      resources: ["https://api.example.test/mcp"],
+      restrictions: null,
       createdAt: "2026-10-01T12:00:00Z",
-      expiresAt: "2026-10-31T12:00:00Z",
       lastUsedAt: null,
     },
     {
       id: "client",
-      name: "Example app",
-      client: { name: "Example app", id: "example.test" },
-      permissions: "Read-only",
+      clientId: "example.test",
+      clientName: "Example app",
+      logoUri: null,
+      ceiling: "viewer",
+      resources: ["https://api.example.test/mcp"],
+      restrictions: null,
       createdAt: "2026-10-01T12:00:00Z",
-      expiresAt: "2026-10-31T12:00:00Z",
-      lastUsedAt: null,
+      lastUsedAt: "2026-10-05T12:00:00Z",
     },
   ]);
+
   return (
     <div className="grid gap-6">
       <h1>

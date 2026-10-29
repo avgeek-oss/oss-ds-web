@@ -1,93 +1,102 @@
 "use client";
 
-import { useState, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Login01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "../../buttons/button.js";
+import { Alert } from "../../feedback/alert.js";
 import { AuthScreen } from "./auth-screen.js";
-import { AuthAction } from "./auth-action.js";
-import { IdentityCredentialsForm } from "./identity-credentials-form.js";
+import {
+  authRedirectErrorMessage,
+  type AuthRedirectErrorDetails,
+} from "./auth-messages.js";
+
+export {
+  authRedirectErrorMessage,
+  type AuthCopyNames,
+  type AuthRedirectErrorDetails,
+} from "./auth-messages.js";
 
 export type SignInProps = {
   brand: ReactNode;
+  /** The app, used in the description and error messages. */
+  productName: string;
+  /** The organisation's identity provider, such as "authentik". */
+  providerName: string;
+  /** A decorative 16px provider logo; the sign-in icon by default. */
+  providerIcon?: ReactNode;
   description?: ReactNode;
-  defaultEmail?: string;
+  /**
+   * The failed sign-in the callback reported, for example
+   * `readAuthRedirectError(location.href)`. Shown above the button.
+   */
+  error?: AuthRedirectErrorDetails | null;
+  /** True while the app is starting sign-in, such as before navigating. */
   isPending?: boolean;
-  onSubmit: ComponentProps<typeof IdentityCredentialsForm>["onSubmit"];
-  onForgotPassword?: () => void;
-  onResendVerification?: () => void;
-  onPasskeySignIn?: () => void;
+  /**
+   * Starts sign-in at the provider. The app navigates to its sign-in URL
+   * with the page to return to, for example
+   * `location.assign(client.signInUrl(returnTo))`.
+   */
+  onContinue: () => void;
 };
 
 export function SignIn({
   brand,
-  description = "Sign in to your account.",
-  defaultEmail,
+  productName,
+  providerName,
+  providerIcon,
+  description,
+  error,
   isPending = false,
-  onSubmit,
-  onForgotPassword,
-  onResendVerification,
-  onPasskeySignIn,
+  onContinue,
 }: SignInProps) {
-  const [submitting, setSubmitting] = useState(false);
-  const [needsVerification, setNeedsVerification] = useState(false);
-  const pending = isPending || submitting;
+  // Navigation to the provider takes a moment; ignore repeated presses.
+  const [started, setStarted] = useState(false);
+  const pending = isPending || started;
+  useEffect(() => {
+    // Back from the provider through the browser's history cache.
+    const restored = (event: PageTransitionEvent) => {
+      if (event.persisted) setStarted(false);
+    };
+    window.addEventListener("pageshow", restored);
+    return () => window.removeEventListener("pageshow", restored);
+  }, []);
   return (
-    <AuthScreen brand={brand} title="Sign in" description={description}>
-      <IdentityCredentialsForm
-        disabled={pending}
-        aria-busy={pending}
-        submitLabel={pending ? "Signing in…" : "Sign in"}
-        identifierLabel="Email"
-        identifierType="email"
-        identifierAutoComplete="email"
-        defaultIdentifier={defaultEmail}
-        onIdentifierChange={() => setNeedsVerification(false)}
-        submitIcon={<HugeiconsIcon aria-hidden icon={Login01Icon} size={16} />}
-        passwordAction={
-          onForgotPassword ? (
-            <AuthAction disabled={pending} onClick={onForgotPassword}>
-              Forgot password?
-            </AuthAction>
-          ) : undefined
-        }
-        onSubmit={async (credentials) => {
-          setNeedsVerification(false);
-          setSubmitting(true);
-          try {
-            await onSubmit(credentials);
-          } catch (error) {
-            setNeedsVerification(
-              typeof error === "object" &&
-                error !== null &&
-                "code" in error &&
-                error.code === "EMAIL_NOT_VERIFIED",
-            );
-            throw error;
-          } finally {
-            setSubmitting(false);
-          }
+    <AuthScreen
+      brand={brand}
+      title="Sign in"
+      description={
+        description ??
+        `Sign in to ${productName} with your ${providerName} account.`
+      }
+    >
+      {error ? (
+        <Alert status="danger">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Sign-in didn't complete</Alert.Title>
+            <Alert.Description>
+              {authRedirectErrorMessage(error, { productName, providerName })}
+            </Alert.Description>
+          </Alert.Content>
+        </Alert>
+      ) : null}
+      <Button
+        className="w-full"
+        isDisabled={pending}
+        isPending={pending}
+        onPress={() => {
+          if (pending) return;
+          setStarted(true);
+          onContinue();
         }}
-      />
-      {onPasskeySignIn && (
-        <Button
-          isDisabled={pending}
-          className="w-full"
-          variant="secondary"
-          onPress={onPasskeySignIn}
-        >
-          Sign in with Passkey
-        </Button>
-      )}
-      {needsVerification && onResendVerification && (
-        <AuthAction
-          className="justify-self-center"
-          disabled={pending}
-          onClick={onResendVerification}
-        >
-          Need a new verification email?
-        </AuthAction>
-      )}
+      >
+        {providerIcon ?? (
+          <HugeiconsIcon aria-hidden icon={Login01Icon} size={16} />
+        )}
+        {pending ? "Redirecting…" : `Continue with ${providerName}`}
+      </Button>
     </AuthScreen>
   );
 }

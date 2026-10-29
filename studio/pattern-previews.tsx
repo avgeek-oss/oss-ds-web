@@ -1,7 +1,5 @@
 import { useState, type ReactNode } from "react";
 import { Button } from "../src/buttons/button.js";
-import { EmailChangeSettings } from "../src/patterns/account-settings/email-change-settings.js";
-import { PasswordChangeSettings } from "../src/patterns/account-settings/password-change-settings.js";
 import { ApiKeysSettings } from "../src/patterns/account-settings/api-keys-settings.js";
 import {
   ApiKeysTable,
@@ -10,17 +8,12 @@ import {
   type AuthorizedClient,
 } from "../src/patterns/account-settings/api-keys-table.js";
 import { CreateApiKeyDialog } from "../src/patterns/account-settings/create-api-key-dialog.js";
+import { RotateApiKeyDialog } from "../src/patterns/account-settings/rotate-api-key-dialog.js";
 import {
-  MembersTable,
-  type Member,
-} from "../src/patterns/team-settings/members-table.js";
-import {
-  InvitationsTable,
-  type Invitation,
-} from "../src/patterns/team-settings/invitations-table.js";
-import { InviteMemberDialog } from "../src/patterns/team-settings/invite-member-dialog.js";
-import { MemberEditDialog } from "../src/patterns/team-settings/member-edit-dialog.js";
-import { AddMemberDialog } from "../src/patterns/team-settings/add-member-dialog.js";
+  PeopleDirectory,
+  type DirectoryPerson,
+} from "../src/patterns/team-settings/people-directory.js";
+import { WorkspaceMembersSettings } from "../src/patterns/team-settings/workspace-members-settings.js";
 import { HistoryTable } from "../src/patterns/history/history-table.js";
 import { HistorySearch } from "../src/patterns/history/history-search.js";
 import { HistoryFilter } from "../src/patterns/history/history-filter.js";
@@ -49,24 +42,11 @@ import {
 } from "../src/patterns/feedback/query-state.js";
 import { StatusIndicator } from "../src/patterns/status-indicator.js";
 import { ChoiceField } from "../src/patterns/choice-field.js";
+import {
+  teamRoleOptions,
+  type TeamRole,
+} from "../src/patterns/team-settings/team-role-options.js";
 
-export const roles = [
-  {
-    id: "admin",
-    label: "Admin",
-    description: "Manage the team and its resources.",
-  },
-  {
-    id: "member",
-    label: "Member",
-    description: "Work with the resources shared with your team.",
-  },
-  {
-    id: "viewer",
-    label: "Viewer",
-    description: "View resources without making changes.",
-  },
-];
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -107,77 +87,54 @@ function useScenario() {
   };
 }
 
-export function EmailChangePreview() {
-  const scenario = useScenario();
-  const [verified, setVerified] = useState(false);
-  const [pending, setPending] = useState<{
-    email: string;
-    expiresAt: string;
-  } | null>(null);
-  const [resendAvailableAt, setResendAvailableAt] = useState(0);
-  return (
-    <Preview>
-      {scenario.controls}
-      <Button variant="secondary" onPress={() => setVerified(!verified)}>
-        Toggle verified
-      </Button>
-      <EmailChangeSettings
-        email="alex@example.test"
-        isVerified={verified}
-        pendingChange={pending}
-        formatDate={formatDate}
-        resendAvailableAt={resendAvailableAt}
-        onRequestChange={async (email) => {
-          await scenario.run();
-          setPending({ email, expiresAt: "2026-10-06T15:00:00Z" });
-        }}
-        onCancelChange={async () => {
-          await scenario.run();
-          setPending(null);
-        }}
-        onResendVerification={async () => {
-          await scenario.run();
-          setResendAvailableAt(Date.now() + 60000);
-        }}
-      />
-    </Preview>
-  );
-}
-export function PasswordChangePreview() {
-  const scenario = useScenario();
-  const [required, setRequired] = useState(true);
-  return (
-    <Preview>
-      {scenario.controls}
-      <Button variant="secondary" onPress={() => setRequired(!required)}>
-        Toggle current password requirement
-      </Button>
-      <PasswordChangeSettings
-        requireCurrentPassword={required}
-        onChangePassword={scenario.run}
-      />
-    </Preview>
-  );
-}
 const primaryKey: ApiKey = {
   id: "deploy-key",
   name: "Release automation",
-  tokenHint: "key_••••9a2f",
-  permissions: "Administrative",
+  ceiling: "admin",
+  workspace: null,
   createdAt: "2026-09-01T10:00:00Z",
   lastUsedAt: "2026-10-06T10:00:00Z",
   expiresAt: "2026-12-01T10:00:00Z",
+  replacedBy: null,
+  graceUntil: null,
 };
 const keys: ApiKey[] = [
   primaryKey,
   {
     id: "read-key",
     name: "Read-only reporting",
-    permissions: "Read-only",
+    ceiling: "viewer",
+    workspace: "ops",
+    createdAt: "2026-09-12T10:00:00Z",
     expiresAt: null,
     lastUsedAt: null,
+    replacedBy: null,
+    graceUntil: null,
+  },
+  {
+    id: "old-key",
+    name: "Nightly export",
+    ceiling: "member",
+    workspace: null,
+    createdAt: "2026-06-01T10:00:00Z",
+    expiresAt: "2027-06-01T10:00:00Z",
+    lastUsedAt: "2026-10-05T02:00:00Z",
+    replacedBy: "new-key",
+    graceUntil: "2099-01-01T00:00:00Z",
+  },
+  {
+    id: "expired-key",
+    name: "Spring migration",
+    ceiling: "member",
+    workspace: null,
+    createdAt: "2026-03-01T10:00:00Z",
+    expiresAt: "2026-04-01T10:00:00Z",
+    lastUsedAt: "2026-03-30T10:00:00Z",
+    replacedBy: null,
+    graceUntil: null,
   },
 ];
+const workspaceNames: Record<string, string> = { ops: "Operations" };
 export function ApiKeysSettingsPreview() {
   const scenario = useScenario();
   const [items, setItems] = useState(keys);
@@ -187,6 +144,31 @@ export function ApiKeysSettingsPreview() {
       <ApiKeysSettings
         items={scenario.empty ? [] : items}
         formatDate={formatDate}
+        workspaceLabel={(id) => workspaceNames[id] ?? id}
+        onRotate={async (id, graceSeconds) => {
+          await scenario.run();
+          setItems((items) => [
+            {
+              ...primaryKey,
+              id: `rotated-${Date.now()}`,
+              name: items.find((item) => item.id === id)?.name ?? "Key",
+              createdAt: new Date().toISOString(),
+              lastUsedAt: null,
+            },
+            ...items.map((item) =>
+              item.id === id
+                ? {
+                    ...item,
+                    replacedBy: "rotated",
+                    graceUntil: new Date(
+                      Date.now() + graceSeconds * 1000,
+                    ).toISOString(),
+                  }
+                : item,
+            ),
+          ]);
+          return { key: "demo-rotated-key-save-once" };
+        }}
         onRevoke={async (id) => {
           await scenario.run();
           setItems((items) => items.filter((item) => item.id !== id));
@@ -203,6 +185,7 @@ export function ApiKeysTablePreview() {
       <ApiKeysTable
         items={scenario.empty ? [] : keys}
         formatDate={formatDate}
+        workspaceLabel={(id) => workspaceNames[id] ?? id}
         actions={() => <Button variant="secondary">Details</Button>}
       />
     </Preview>
@@ -210,16 +193,30 @@ export function ApiKeysTablePreview() {
 }
 const clients: AuthorizedClient[] = [
   {
-    ...primaryKey,
-    id: "client",
-    client: {
-      name: "Example desktop client",
-      id: "https://client.example.test",
-      trust: {
-        label: "Unverified",
-        color: "warning",
-        description: "Review the client before authorizing access.",
-      },
+    id: "grant-codex",
+    clientId: "https://chatgpt.com/oauth/codex/client.json",
+    clientName: "Codex",
+    logoUri: null,
+    ceiling: "member",
+    resources: ["https://api.example.test/mcp"],
+    restrictions: null,
+    createdAt: "2026-10-01T12:00:00Z",
+    lastUsedAt: "2026-10-06T09:30:00Z",
+  },
+  {
+    id: "grant-client",
+    clientId: "https://client.example.test/oauth/client.json",
+    clientName: "Example desktop client",
+    logoUri: null,
+    ceiling: "viewer",
+    resources: ["https://api.example.test/mcp"],
+    restrictions: { workspace: "ops" },
+    createdAt: "2026-10-02T12:00:00Z",
+    lastUsedAt: null,
+    trust: {
+      label: "Unverified",
+      color: "warning",
+      description: "Review the client before authorizing access.",
     },
   },
 ];
@@ -232,14 +229,19 @@ export function AuthorizedClientsPreview() {
       <AuthorizedClientsTable
         items={scenario.empty ? [] : items}
         formatDate={formatDate}
+        formatRestrictions={(restrictions) =>
+          typeof restrictions?.workspace === "string"
+            ? (workspaceNames[restrictions.workspace] ?? restrictions.workspace)
+            : "All workspaces"
+        }
         actions={(item) => (
           <AsyncActionButton
             variant="danger"
             confirmation={{
-              title: "Revoke connection?",
+              title: "Disconnect this app?",
               description:
-                "This app will lose access immediately. Sign in again from the app to reconnect.",
-              confirmLabel: "Revoke connection",
+                "It loses access at once. Connect it again from the app to reconnect.",
+              confirmLabel: "Disconnect",
             }}
             onAction={async () => {
               await scenario.run();
@@ -248,14 +250,18 @@ export function AuthorizedClientsPreview() {
               );
             }}
           >
-            Revoke
+            Disconnect
           </AsyncActionButton>
         )}
       />
     </Preview>
   );
 }
-export function CreateApiKeyPreview() {
+export function CreateApiKeyPreview({
+  workspaces = false,
+}: {
+  workspaces?: boolean;
+}) {
   const scenario = useScenario();
   const [isOpen, setOpen] = useState(false);
   return (
@@ -265,140 +271,127 @@ export function CreateApiKeyPreview() {
       <CreateApiKeyDialog
         isOpen={isOpen}
         onOpenChange={setOpen}
+        ceilings={["viewer", "member"]}
+        workspaces={
+          workspaces
+            ? [
+                { id: "ops", label: "Operations" },
+                { id: "fleet", label: "Fleet" },
+              ]
+            : undefined
+        }
         onCreate={async () => {
           await scenario.run();
-          return { token: "demo-preview-key-save-once" };
+          return { key: "demo-preview-key-save-once" };
         }}
       />
     </Preview>
   );
 }
-const member: Member = {
-  id: "alex",
-  name: "Alex Taylor",
-  email: "alex@example.test",
-  role: "member",
-  accountStatus: { label: "Active", color: "success" },
-  securityStatus: { label: "Enabled", color: "success" },
-};
-export function MembersPreview() {
+export function RotateApiKeyPreview() {
+  const scenario = useScenario();
+  const [isOpen, setOpen] = useState(false);
+  return (
+    <Preview>
+      {scenario.controls}
+      <Button onPress={() => setOpen(true)}>Rotate key</Button>
+      <RotateApiKeyDialog
+        isOpen={isOpen}
+        onOpenChange={setOpen}
+        apiKey={primaryKey}
+        onRotate={async () => {
+          await scenario.run();
+          return { key: "demo-rotated-key-save-once" };
+        }}
+      />
+    </Preview>
+  );
+}
+export const people: DirectoryPerson[] = [
+  {
+    id: "ada",
+    name: "Ada Lovelace",
+    email: "ada@example.test",
+    role: "admin",
+    roleSource: "scim",
+    lastSignInAt: "2026-10-06T08:12:00Z",
+  },
+  {
+    id: "sam",
+    name: "Sam Chen",
+    email: "sam@example.test",
+    role: "member",
+    roleSource: "scim",
+    lastSignInAt: "2026-10-04T16:40:00Z",
+  },
+  {
+    id: "lee",
+    name: "Lee Okafor",
+    email: "lee@example.test",
+    role: null,
+    roleSource: "scim",
+    lastSignInAt: "2026-09-20T11:00:00Z",
+  },
+  {
+    id: "kim",
+    name: null,
+    email: "kim@example.test",
+    role: "viewer",
+    roleSource: "claims",
+    status: "deactivated",
+    lastSignInAt: null,
+  },
+];
+export function PeopleDirectoryPreview() {
   const scenario = useScenario();
   return (
     <Preview>
       {scenario.controls}
-      <MembersTable
-        items={
+      <PeopleDirectory
+        items={scenario.empty ? [] : people}
+        providerName="authentik"
+        manageUrl="https://auth.example.test/if/admin/"
+        currentUserId="ada"
+        formatDate={formatDate}
+      />
+    </Preview>
+  );
+}
+export function WorkspaceMembersPreview() {
+  const scenario = useScenario();
+  const [memberIds, setMemberIds] = useState(["ada", "sam"]);
+  return (
+    <Preview>
+      {scenario.controls}
+      <WorkspaceMembersSettings
+        workspaceName="Operations"
+        providerName="authentik"
+        members={
           scenario.empty
             ? []
-            : [
-                member,
-                {
-                  ...member,
-                  id: "sam",
-                  name: "Sam Chen",
-                  email: "sam@example.test",
-                  role: "viewer",
-                  accountStatus: {
-                    label: "Password setup pending",
-                    color: "warning",
-                  },
-                  securityStatus: { label: "Not enabled", color: "warning" },
-                },
-              ]
+            : people.filter((person) => memberIds.includes(person.id))
         }
-        roles={roles}
-        actions={() => <Button variant="secondary">Edit</Button>}
-      />
-    </Preview>
-  );
-}
-export function InvitationsPreview() {
-  const scenario = useScenario();
-  const [items, setItems] = useState<Invitation[]>([
-    {
-      id: "invite",
-      email: "sam@example.test",
-      role: "member",
-      expiresAt: "2026-10-13T10:00:00Z",
-    },
-  ]);
-  return (
-    <Preview>
-      {scenario.controls}
-      <InvitationsTable
-        items={scenario.empty ? [] : items}
-        roles={roles}
+        people={[
+          ...people,
+          {
+            id: "noor",
+            name: "Noor Haddad",
+            email: "noor@example.test",
+            role: "member",
+            roleSource: "scim",
+            lastSignInAt: null,
+          },
+        ]}
+        currentUserId="ada"
         formatDate={formatDate}
-        onCopyLink={async () => {
-          await navigator.clipboard.writeText(
-            "https://example.test/invite/demo",
-          );
-        }}
-        onResend={scenario.run}
-        onRevoke={async (item) => {
+        onAdd={async (id) => {
           await scenario.run();
-          setItems((items) => items.filter((row) => row.id !== item.id));
+          setMemberIds((ids) => [...ids, id]);
         }}
-      />
-    </Preview>
-  );
-}
-export function InviteMemberPreview() {
-  const scenario = useScenario();
-  const [isOpen, setOpen] = useState(false);
-  return (
-    <Preview>
-      {scenario.controls}
-      <Button onPress={() => setOpen(true)}>Create invitation</Button>
-      <InviteMemberDialog
-        isOpen={isOpen}
-        onOpenChange={setOpen}
-        roles={roles}
-        resultGuidance={
-          <p>Email delivery is not configured. Share the link privately.</p>
-        }
-        onInvite={async () => {
+        onRemove={async (id) => {
           await scenario.run();
-          return { inviteUrl: "https://example.test/invite/demo" };
+          setMemberIds((ids) => ids.filter((item) => item !== id));
         }}
-      />
-    </Preview>
-  );
-}
-export function MemberEditPreview({
-  mode = "identity-and-role",
-}: {
-  mode?: "identity-and-role" | "role-only";
-}) {
-  const scenario = useScenario();
-  const [isOpen, setOpen] = useState(false);
-  return (
-    <Preview>
-      {scenario.controls}
-      <Button onPress={() => setOpen(true)}>Edit member</Button>
-      <MemberEditDialog
-        isOpen={isOpen}
-        onOpenChange={setOpen}
-        member={member}
-        roles={roles}
-        mode={mode}
-        onSave={scenario.run}
-      />
-    </Preview>
-  );
-}
-export function AddMemberPreview() {
-  const scenario = useScenario();
-  const [isOpen, setOpen] = useState(false);
-  return (
-    <Preview>
-      {scenario.controls}
-      <Button onPress={() => setOpen(true)}>Add user</Button>
-      <AddMemberDialog
-        isOpen={isOpen}
-        onOpenChange={setOpen}
-        roles={roles}
-        onAdd={scenario.run}
       />
     </Preview>
   );
@@ -819,7 +812,7 @@ export function StatusIndicatorPreview() {
   );
 }
 export function ChoiceFieldPreview() {
-  const [value, setValue] = useState("member");
+  const [value, setValue] = useState<TeamRole>("member");
   return (
     <Preview>
       <div className="max-w-sm">
@@ -827,7 +820,7 @@ export function ChoiceFieldPreview() {
           label="Role"
           value={value}
           onChange={setValue}
-          options={roles}
+          options={teamRoleOptions}
         />
       </div>
     </Preview>

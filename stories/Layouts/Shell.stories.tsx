@@ -10,13 +10,11 @@ import {
   UserGroupIcon,
   Settings01Icon,
   Key01Icon,
-  FingerPrintIcon,
   ComputerIcon,
   SourceCodeIcon,
   MoreHorizontalIcon,
   Rocket01Icon,
   Alert02Icon,
-  Mail01Icon,
   BookOpen01Icon,
   Logout01Icon,
 } from "@hugeicons/core-free-icons";
@@ -46,14 +44,11 @@ import {
   SettingsPageTitle,
   settingsPageLabels,
 } from "../../src/patterns/settings/page-title";
-import {
-  PasskeysTable,
-  SessionsTable,
-} from "../../src/patterns/settings/tables";
+import { SessionsTable } from "../../src/patterns/settings/tables";
+import { ProfileSettings } from "../../src/patterns/account-settings/profile-settings";
 import { Button } from "../../src/buttons/button";
 import { Widget } from "../../src/data-display/widget";
 import { Chip } from "../../src/data-display/chip";
-import { Dropdown } from "../../src/overlays/dropdown";
 import { toast } from "../../src/overlays/toast";
 const icon = (value: typeof UserAccountIcon) => (
   <HugeiconsIcon aria-hidden icon={value} strokeWidth={1.5} />
@@ -74,15 +69,7 @@ const account = [
   },
   {
     title: "Security",
-    items: [
-      {
-        id: "email-password",
-        label: "Email & Password",
-        icon: icon(Key01Icon),
-      },
-      { id: "passkeys", label: "Passkeys", icon: icon(FingerPrintIcon) },
-      { id: "sessions", label: "Sessions", icon: icon(ComputerIcon) },
-    ],
+    items: [{ id: "sessions", label: "Sessions", icon: icon(ComputerIcon) }],
   },
   {
     title: "API & MCP",
@@ -104,7 +91,7 @@ function Shell({
   const [pathname, setPathname] = useState(initial);
   const { sidebarOpen: open, onSidebarOpenChange: setOpen } =
     usePersistentAppSidebar("oss-ds-fixture-sidebar");
-  const [name, setName] = useState("Alex");
+  const name = "Alex Taylor";
   const [teamName, setTeamName] = useState("Avgeek");
   const [workspace, setWorkspace] = useState("default");
   const [notifications, setNotifications] = useState<NotificationItem[]>([
@@ -271,11 +258,6 @@ function Shell({
                             icon: icon(Settings01Icon),
                           },
                           {
-                            id: "email-password",
-                            label: "Email & Password",
-                            icon: icon(Mail01Icon),
-                          },
-                          {
                             id: "api-keys",
                             label: "API Keys",
                             icon: icon(Key01Icon),
@@ -417,33 +399,7 @@ function Shell({
                   )
                 }
                 actions={
-                  selected === "passkeys" ? (
-                    <div className="flex gap-2">
-                      <Button onPress={() => toast.info("Add passkey preview")}>
-                        Add passkey
-                      </Button>
-                      <Dropdown>
-                        <Dropdown.Trigger
-                          aria-label="Passkey actions"
-                          className="button button--sm button--secondary button--icon-only"
-                        >
-                          {icon(MoreHorizontalIcon)}
-                        </Dropdown.Trigger>
-                        <Dropdown.Popover>
-                          <Dropdown.Menu
-                            aria-label="Passkey actions"
-                            onAction={() =>
-                              toast.info("Replace recovery codes preview")
-                            }
-                          >
-                            <Dropdown.Item id="replace">
-                              Replace recovery codes
-                            </Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown.Popover>
-                      </Dropdown>
-                    </div>
-                  ) : !isAccount && !isTeam ? (
+                  !isAccount && !isTeam ? (
                     <div className="flex gap-2">
                       <Button onPress={() => toast.info("Deployment preview")}>
                         {icon(Rocket01Icon)}Deploy
@@ -461,10 +417,11 @@ function Shell({
                 }
               >
                 {isAccount && selected === "profile" ? (
-                  <NameSettingsForm
-                    title="Profile details"
-                    value={name}
-                    onSave={async (value) => setName(value)}
+                  <ProfileSettings
+                    name={name}
+                    email="alex@example.test"
+                    role="admin"
+                    providerName="authentik"
                   />
                 ) : isTeam && selected === "general" ? (
                   <NameSettingsForm
@@ -475,25 +432,6 @@ function Shell({
                   />
                 ) : selected === "preferences" ? (
                   <PreferencesSettingsPreview embedded />
-                ) : selected === "passkeys" ? (
-                  <PasskeysTable
-                    items={[
-                      {
-                        id: "1",
-                        name: "iCloud Keychain",
-                        createdAt: "2026-10-05T10:00:00Z",
-                      },
-                    ]}
-                    formatDate={formatDate}
-                    actions={() => (
-                      <Button
-                        variant="secondary"
-                        onPress={() => toast.info("Rename passkey preview")}
-                      >
-                        Rename
-                      </Button>
-                    )}
-                  />
                 ) : selected === "sessions" ? (
                   <SessionsTable
                     items={[
@@ -507,8 +445,11 @@ function Shell({
                     ]}
                     formatDate={formatDate}
                     actions={() => (
-                      <Button variant="danger" isDisabled>
-                        Revoke
+                      <Button
+                        variant="secondary"
+                        onPress={() => toast.info("Sign out preview")}
+                      >
+                        Sign out
                       </Button>
                     )}
                   />

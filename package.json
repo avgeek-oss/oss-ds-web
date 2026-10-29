@@ -51,11 +51,15 @@
     "test:stories": "vitest run"
   },
   "peerDependencies": {
+    "@avgeek-oss/auth-client": "^0.2.0",
     "next": "^16.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "peerDependenciesMeta": {
+    "@avgeek-oss/auth-client": {
+      "optional": true
+    },
     "next": {
       "optional": true
     }
@@ -83,6 +87,7 @@
     "zod": "^4.6.6"
   },
   "devDependencies": {
+    "@avgeek-oss/auth-client": "0.2.0",
     "@playwright/test": "1.63.0",
     "@storybook/addon-a11y": "10.6.4",
     "@storybook/addon-docs": "10.6.4",
@@ -398,10 +403,6 @@
       "types": "./dist/patterns/auth/identity-auth-frame.d.ts",
       "import": "./dist/patterns/auth/identity-auth-frame.js"
     },
-    "./patterns/auth/identity-credentials-form": {
-      "types": "./dist/patterns/auth/identity-credentials-form.d.ts",
-      "import": "./dist/patterns/auth/identity-credentials-form.js"
-    },
     "./patterns/pages/page": {
       "types": "./dist/patterns/pages/page.d.ts",
       "import": "./dist/patterns/pages/page.js"
@@ -445,10 +446,6 @@
     "./patterns/auth/auth-form": {
       "types": "./dist/patterns/auth/auth-form.d.ts",
       "import": "./dist/patterns/auth/auth-form.js"
-    },
-    "./patterns/auth/recovery-codes": {
-      "types": "./dist/patterns/auth/recovery-codes.d.ts",
-      "import": "./dist/patterns/auth/recovery-codes.js"
     },
     "./patterns/notifications": {
       "types": "./dist/patterns/notifications.d.ts",
@@ -506,45 +503,17 @@
       "types": "./dist/patterns/auth/sign-in.d.ts",
       "import": "./dist/patterns/auth/sign-in.js"
     },
-    "./patterns/auth/forgot-password": {
-      "types": "./dist/patterns/auth/forgot-password.d.ts",
-      "import": "./dist/patterns/auth/forgot-password.js"
+    "./patterns/auth/access-denied": {
+      "types": "./dist/patterns/auth/access-denied.d.ts",
+      "import": "./dist/patterns/auth/access-denied.js"
     },
-    "./patterns/auth/reset-link-sent": {
-      "types": "./dist/patterns/auth/reset-link-sent.d.ts",
-      "import": "./dist/patterns/auth/reset-link-sent.js"
+    "./patterns/auth/step-up-dialog": {
+      "types": "./dist/patterns/auth/step-up-dialog.d.ts",
+      "import": "./dist/patterns/auth/step-up-dialog.js"
     },
-    "./patterns/auth/password-setup": {
-      "types": "./dist/patterns/auth/password-setup.d.ts",
-      "import": "./dist/patterns/auth/password-setup.js"
-    },
-    "./patterns/auth/accept-invitation": {
-      "types": "./dist/patterns/auth/accept-invitation.d.ts",
-      "import": "./dist/patterns/auth/accept-invitation.js"
-    },
-    "./patterns/auth/invitation-verification": {
-      "types": "./dist/patterns/auth/invitation-verification.d.ts",
-      "import": "./dist/patterns/auth/invitation-verification.js"
-    },
-    "./patterns/auth/invitation-unavailable": {
-      "types": "./dist/patterns/auth/invitation-unavailable.d.ts",
-      "import": "./dist/patterns/auth/invitation-unavailable.js"
-    },
-    "./patterns/auth/passkey-verification": {
-      "types": "./dist/patterns/auth/passkey-verification.d.ts",
-      "import": "./dist/patterns/auth/passkey-verification.js"
-    },
-    "./patterns/auth/recovery-sign-in": {
-      "types": "./dist/patterns/auth/recovery-sign-in.d.ts",
-      "import": "./dist/patterns/auth/recovery-sign-in.js"
-    },
-    "./patterns/auth/recovery-codes-screen": {
-      "types": "./dist/patterns/auth/recovery-codes-screen.d.ts",
-      "import": "./dist/patterns/auth/recovery-codes-screen.js"
-    },
-    "./patterns/auth/confirm-identity-dialog": {
-      "types": "./dist/patterns/auth/confirm-identity-dialog.d.ts",
-      "import": "./dist/patterns/auth/confirm-identity-dialog.js"
+    "./patterns/auth/connected": {
+      "types": "./dist/patterns/auth/connected.d.ts",
+      "import": "./dist/patterns/auth/connected.js"
     },
     "./patterns/account-settings/profile-settings": {
       "types": "./dist/patterns/account-settings/profile-settings.d.ts",
@@ -554,10 +523,6 @@
       "types": "./dist/patterns/account-settings/preferences-settings.d.ts",
       "import": "./dist/patterns/account-settings/preferences-settings.js"
     },
-    "./patterns/account-settings/passkey-settings": {
-      "types": "./dist/patterns/account-settings/passkey-settings.d.ts",
-      "import": "./dist/patterns/account-settings/passkey-settings.js"
-    },
     "./patterns/account-settings/sessions-settings": {
       "types": "./dist/patterns/account-settings/sessions-settings.d.ts",
       "import": "./dist/patterns/account-settings/sessions-settings.js"
@@ -565,18 +530,6 @@
     "./patterns/account-settings/api-keys-settings": {
       "types": "./dist/patterns/account-settings/api-keys-settings.d.ts",
       "import": "./dist/patterns/account-settings/api-keys-settings.js"
-    },
-    "./patterns/team-settings/members-table": {
-      "types": "./dist/patterns/team-settings/members-table.d.ts",
-      "import": "./dist/patterns/team-settings/members-table.js"
-    },
-    "./patterns/account-settings/email-change-settings": {
-      "types": "./dist/patterns/account-settings/email-change-settings.d.ts",
-      "import": "./dist/patterns/account-settings/email-change-settings.js"
-    },
-    "./patterns/account-settings/password-change-settings": {
-      "types": "./dist/patterns/account-settings/password-change-settings.d.ts",
-      "import": "./dist/patterns/account-settings/password-change-settings.js"
     },
     "./patterns/account-settings/api-keys-table": {
       "types": "./dist/patterns/account-settings/api-keys-table.d.ts",
@@ -586,21 +539,9 @@
       "types": "./dist/patterns/account-settings/create-api-key-dialog.d.ts",
       "import": "./dist/patterns/account-settings/create-api-key-dialog.js"
     },
-    "./patterns/team-settings/invitations-table": {
-      "types": "./dist/patterns/team-settings/invitations-table.d.ts",
-      "import": "./dist/patterns/team-settings/invitations-table.js"
-    },
-    "./patterns/team-settings/invite-member-dialog": {
-      "types": "./dist/patterns/team-settings/invite-member-dialog.d.ts",
-      "import": "./dist/patterns/team-settings/invite-member-dialog.js"
-    },
-    "./patterns/team-settings/member-edit-dialog": {
-      "types": "./dist/patterns/team-settings/member-edit-dialog.d.ts",
-      "import": "./dist/patterns/team-settings/member-edit-dialog.js"
-    },
-    "./patterns/team-settings/add-member-dialog": {
-      "types": "./dist/patterns/team-settings/add-member-dialog.d.ts",
-      "import": "./dist/patterns/team-settings/add-member-dialog.js"
+    "./patterns/account-settings/rotate-api-key-dialog": {
+      "types": "./dist/patterns/account-settings/rotate-api-key-dialog.d.ts",
+      "import": "./dist/patterns/account-settings/rotate-api-key-dialog.js"
     },
     "./patterns/history/history-table": {
       "types": "./dist/patterns/history/history-table.d.ts",
@@ -666,33 +607,17 @@
       "types": "./dist/patterns/account-settings/profile-image-settings.d.ts",
       "import": "./dist/patterns/account-settings/profile-image-settings.js"
     },
-    "./patterns/auth/invitation-password-setup": {
-      "types": "./dist/patterns/auth/invitation-password-setup.d.ts",
-      "import": "./dist/patterns/auth/invitation-password-setup.js"
-    },
-    "./patterns/auth/passkey-recovery-verification": {
-      "types": "./dist/patterns/auth/passkey-recovery-verification.d.ts",
-      "import": "./dist/patterns/auth/passkey-recovery-verification.js"
-    },
-    "./patterns/team-settings/remove-member-dialog": {
-      "types": "./dist/patterns/team-settings/remove-member-dialog.d.ts",
-      "import": "./dist/patterns/team-settings/remove-member-dialog.js"
-    },
-    "./patterns/team-settings/revoke-invitation-dialog": {
-      "types": "./dist/patterns/team-settings/revoke-invitation-dialog.d.ts",
-      "import": "./dist/patterns/team-settings/revoke-invitation-dialog.js"
-    },
     "./patterns/team-settings/team-general-settings": {
       "types": "./dist/patterns/team-settings/team-general-settings.d.ts",
       "import": "./dist/patterns/team-settings/team-general-settings.js"
     },
-    "./patterns/auth/verification-email": {
-      "types": "./dist/patterns/auth/verification-email.d.ts",
-      "import": "./dist/patterns/auth/verification-email.js"
+    "./patterns/team-settings/people-directory": {
+      "types": "./dist/patterns/team-settings/people-directory.d.ts",
+      "import": "./dist/patterns/team-settings/people-directory.js"
     },
-    "./patterns/auth/email-confirmation": {
-      "types": "./dist/patterns/auth/email-confirmation.d.ts",
-      "import": "./dist/patterns/auth/email-confirmation.js"
+    "./patterns/team-settings/workspace-members-settings": {
+      "types": "./dist/patterns/team-settings/workspace-members-settings.d.ts",
+      "import": "./dist/patterns/team-settings/workspace-members-settings.js"
     },
     "./overlays/overlay-suspension": {
       "types": "./dist/overlays/overlay-suspension.d.ts",
