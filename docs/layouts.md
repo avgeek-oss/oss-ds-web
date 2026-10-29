@@ -118,6 +118,8 @@ Modals, alert dialogs and drawers use 20px dialog padding, a 16px gap between th
 
 Keep the close control inside the header for title alignment. HeroUI's scrolling, focus management, dismissal and surface styles remain unchanged.
 
+`Dialog` (`overlays/dialog`) is this composition for a titled dialog with an optional footer. Pass `open`, `onClose`, a `title` (text or a node) and `footer` actions; `wide` uses the large container, and `size`/`scroll` set the container directly. `isDismissDisabled` disables the close button, Escape and outside presses, for example while a request is pending. Under a suspended `OverlaySuspensionScope` the native modal unmounts and dismissal is ignored while `open` is kept. Compose `Modal` directly when the dialog needs a different structure.
+
 ## Typography and tables
 
 Use 19px decorative icons beside page titles, including custom `titleContent`, matching secondary sidebar entity headings. Navigation rows use 17px icons. Use `SettingsPageTitle` for common account and team settings headings. Reserve that size in a non-shrinking icon wrapper; scope SVG sizing to the leading icon so nearby 16px help icons keep their size. Widget titles, table cells and ordinary controls use 16px icons; compact buttons retain their native 14px icon sizing. Metric icons beside `text-lg` values may use 20px. Empty-state illustrations use 32px. Keep the icon library's default stroke width and avoid global SVG size overrides.

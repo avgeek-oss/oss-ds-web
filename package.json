@@ -769,6 +769,26 @@
     "./navigation/workspace-selector": {
       "types": "./dist/navigation/workspace-selector.d.ts",
       "import": "./dist/navigation/workspace-selector.js"
+    },
+    "./utilities/mcp-client-presentation": {
+      "types": "./dist/utilities/mcp-client-presentation.d.ts",
+      "import": "./dist/utilities/mcp-client-presentation.js"
+    },
+    "./data-display/relative-time": {
+      "types": "./dist/data-display/relative-time.d.ts",
+      "import": "./dist/data-display/relative-time.js"
+    },
+    "./patterns/text-field": {
+      "types": "./dist/patterns/text-field.d.ts",
+      "import": "./dist/patterns/text-field.js"
+    },
+    "./patterns/date-picker-field": {
+      "types": "./dist/patterns/date-picker-field.d.ts",
+      "import": "./dist/patterns/date-picker-field.js"
+    },
+    "./overlays/dialog": {
+      "types": "./dist/overlays/dialog.d.ts",
+      "import": "./dist/overlays/dialog.js"
     }
   }
 }

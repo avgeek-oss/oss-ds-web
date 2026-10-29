@@ -19,3 +19,8 @@ export const Master: Story = {
   name: "Master",
   render: () => <HistorySearchPreview />,
 };
+
+export const AppliedSearch: Story = {
+  name: "Applied search",
+  render: () => <HistorySearchPreview initialSearch="invitation" />,
+};

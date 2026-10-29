@@ -1,6 +1,13 @@
 "use client";
 
-import type { ReactNode } from "react";
+import {
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { DisclosureGroupStateContext } from "react-aria-components";
 import { RouteLink as Link } from "../../navigation/route-link.js";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -22,6 +29,11 @@ export type ProgressChecklistItemProps = {
     "failed" | "running" | "skipped" | "succeeded" | "waiting" | "cancelled";
   runningTone?: "accent" | "warning";
   href?: string;
+  /**
+   * Whether the details start expanded. Defaults to expanding a failed item,
+   * including one that fails after it rendered, until the user toggles it.
+   */
+  defaultExpanded?: boolean;
   children?: ReactNode;
 };
 
@@ -32,10 +44,32 @@ export function ProgressChecklistItem({
   status,
   runningTone = "accent",
   href,
+  defaultExpanded,
   children,
 }: ProgressChecklistItemProps) {
   const canExpand = status !== "waiting" && children != null;
   const failed = status === "failed";
+  const group = useContext(DisclosureGroupStateContext);
+  const [userExpanded, setUserExpanded] = useState<boolean>();
+  const automatic = canExpand && (defaultExpanded ?? failed);
+  const expanded = canExpand && (userExpanded ?? automatic);
+  const previousAutomatic = useRef<boolean>(undefined);
+  // Inside an Accordion the group owns expansion and ignores an item's own
+  // isExpanded, so automatic changes are applied to the group's keys. The
+  // first pass only adds, which keeps keys an app expanded on purpose.
+  useLayoutEffect(() => {
+    const previous = previousAutomatic.current;
+    previousAutomatic.current = automatic;
+    if (!group || userExpanded !== undefined || previous === automatic) return;
+    if (previous === undefined && !automatic) return;
+    if (group.expandedKeys.has(id) === automatic) return;
+    const keys = new Set(
+      group.allowsMultipleExpanded ? group.expandedKeys : [],
+    );
+    if (automatic) keys.add(id);
+    else keys.delete(id);
+    group.setExpandedKeys(keys);
+  }, [automatic, group, id, userExpanded]);
   const completed = status === "succeeded";
   const running = status === "running";
   const cancelled = status === "cancelled";
@@ -116,6 +150,8 @@ export function ProgressChecklistItem({
     <Accordion.Item
       id={id}
       isDisabled={!canExpand}
+      isExpanded={expanded}
+      onExpandedChange={setUserExpanded}
       className="overflow-hidden rounded-xl border border-separator transition-colors data-[expanded=true]:bg-default/40"
     >
       <Accordion.Heading>

@@ -7,6 +7,7 @@ import { SessionsSettings } from "../src/patterns/account-settings/sessions-sett
 import type { DateTimePreferences } from "../src/patterns/settings/date-time-preference-fields";
 import type { Passkey, Session } from "../src/patterns/settings/tables";
 import { preferenceOptions } from "./preference-options";
+import { availableTimeZones } from "../src/utilities/date-time-preferences";
 
 const created = "2026-10-06T00:00:00Z";
 const formatDate = (value: string) =>
@@ -60,7 +61,7 @@ export function PreferencesSettingsPreview({
         allTimeZones
           ? {
               ...preferenceOptions,
-              timeZones: ["UTC", ...Intl.supportedValuesOf("timeZone")],
+              timeZones: availableTimeZones(),
             }
           : preferenceOptions
       }

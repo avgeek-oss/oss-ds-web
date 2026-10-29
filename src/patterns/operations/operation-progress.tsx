@@ -19,7 +19,12 @@ export function OperationProgress({ steps, ...props }: OperationProgressProps) {
       allowsMultipleExpanded
       hideSeparator
       defaultExpandedKeys={steps
-        .filter((step) => step.status === "failed" && step.children != null)
+        .filter(
+          (step) =>
+            step.status !== "waiting" &&
+            step.children != null &&
+            (step.defaultExpanded ?? step.status === "failed"),
+        )
         .map((step) => step.id)}
       className="grid gap-2"
       {...props}

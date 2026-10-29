@@ -9,14 +9,25 @@ export type HistorySearchProps = {
   label: string;
   placeholder?: string;
   onSearch: (value: string) => void;
+  /**
+   * The applied search, such as one read from the URL. The field shows it
+   * initially and again whenever it changes, replacing an unsubmitted draft.
+   */
+  value?: string;
 };
 export function HistorySearch({
   label,
   placeholder,
   onSearch,
+  value: applied = "",
 }: HistorySearchProps) {
   const id = useId();
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(applied);
+  const [shown, setShown] = useState(applied);
+  if (shown !== applied) {
+    setShown(applied);
+    setValue(applied);
+  }
   return (
     <form
       role="search"

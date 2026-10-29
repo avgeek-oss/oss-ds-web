@@ -85,7 +85,7 @@ export function HistoryFilter({
           <span className="flex min-w-0 max-w-full items-center gap-2">
             {selectedIcon ? (
               <span
-                className="inline-flex shrink-0 items-center justify-center leading-none [&_svg]:size-4"
+                className="inline-flex shrink-0 items-center justify-center leading-none [&_svg]:size-4 [&>img]:size-4"
                 aria-hidden="true"
               >
                 {selectedIcon}
@@ -119,6 +119,7 @@ export function HistoryFilter({
               <SearchField.Group>
                 <SearchField.SearchIcon />
                 <SearchField.Input
+                  className="text-base sm:text-sm"
                   placeholder={searchPlaceholder}
                   maxLength={200}
                   autoComplete="off"

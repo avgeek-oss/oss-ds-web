@@ -77,6 +77,7 @@ The additional shared application patterns follow Towbar's common surfaces. Thei
 | `ActionConfirmation`                     | `patterns/actions/action-confirmation`                               |
 | `QueryLoading`, `QueryError`             | `patterns/feedback/query-state`                                      |
 | `ChoiceField`                            | `patterns/choice-field`                                              |
+| `DatePickerField`                        | `patterns/date-picker-field`                                         |
 | `AgentChat`                              | `patterns/agent-chat/agent-chat`                                     |
 | `AgentChatTrigger`                       | `patterns/agent-chat/agent-chat-trigger`                             |
 
@@ -97,6 +98,7 @@ The additional shared application patterns follow Towbar's common surfaces. Thei
 | DatePicker                                | [src/pickers/date-picker.tsx](../src/pickers/date-picker.tsx)                         |
 | DateRangePicker                           | [src/pickers/date-range-picker.tsx](../src/pickers/date-range-picker.tsx)             |
 | RangeCalendar                             | [src/pickers/range-calendar.tsx](../src/pickers/range-calendar.tsx)                   |
+| RelativeTime                              | [src/data-display/relative-time.tsx](../src/data-display/relative-time.tsx)           |
 | TimeField                                 | [src/forms/time-field.tsx](../src/forms/time-field.tsx)                               |
 | DateTimeRangePicker                       | [src/patterns/date-time-range-picker.tsx](../src/patterns/date-time-range-picker.tsx) |
 | Checkbox                                  | [src/forms/checkbox.tsx](../src/forms/checkbox.tsx)                                   |
@@ -105,6 +107,7 @@ The additional shared application patterns follow Towbar's common surfaces. Thei
 | ComboBox                                  | [src/pickers/combo-box.tsx](../src/pickers/combo-box.tsx)                             |
 | Description                               | [src/forms/description.tsx](../src/forms/description.tsx)                             |
 | Disclosure                                | [src/navigation/disclosure.tsx](../src/navigation/disclosure.tsx)                     |
+| Dialog                                    | [src/overlays/dialog.tsx](../src/overlays/dialog.tsx)                                 |
 | Drawer                                    | [src/overlays/drawer.tsx](../src/overlays/drawer.tsx)                                 |
 | Dropdown                                  | [src/overlays/dropdown.tsx](../src/overlays/dropdown.tsx)                             |
 | EmptyState                                | [src/data-display/empty-state.tsx](../src/data-display/empty-state.tsx)               |
@@ -151,11 +154,15 @@ Additional shared account, invitation and passkey surfaces:
 
 `TeamGeneralSettings` ([source](../src/patterns/team-settings/team-general-settings.tsx)) owns the Team details widget and Team name copy. The default mode saves a name; `mode="details"` saves name and description together for apps that support a team description.
 
+`TextField` (`patterns/text-field`) and `Dialog` (`overlays/dialog`) are exported from their subpaths only. Their sources are [src/patterns/text-field.tsx](../src/patterns/text-field.tsx) and [src/overlays/dialog.tsx](../src/overlays/dialog.tsx), previewed under `Patterns / TextField` and `Primitives / Overlays / Dialog`. See [shared application patterns](patterns.md) and [modals](layouts.md#modals).
+
+The package root also re-exports React Aria's `RouterProvider` and `UNSAFE_PortalProvider` (as `PortalProvider`) and the list `Header`, so apps that need them for client routing or portal containers do not depend on React Aria directly. Prefer `RouteProvider` for app navigation.
+
 `OverlaySuspensionScope` and `useOverlaySuspension` are exported from the package root and `overlays/overlay-suspension`. Their source is [src/overlays/overlay-suspension.tsx](../src/overlays/overlay-suspension.tsx), with the retained modal and settings previews under `Primitives / Overlays / OverlaySuspensionScope`. Use the scope to release supported native overlay locks while preserving a mounted owner’s logical state. Use ordinary controlled `isOpen` for intentional dismissal. See [Suspending retained overlays](layouts.md#suspending-retained-overlays) for cancellation, drafts, supported portals and owner-change responsibilities.
 
 ### Date/time preference catalog
 
-The React-free `utilities/date-time-preferences` public subpath and root export provide `dateFormatOptions`, `timeFormatOptions`, `defaultDateTimePreferences`, `DateFormatId`, `TimeFormatId` and `StandardDateTimePreferences`. Use this catalog for common preference controls instead of local option lists. See [forms](forms.md#display-preferences) for defaults, persistence and serialization boundaries.
+The React-free `utilities/date-time-preferences` public subpath and root export provide `dateFormatOptions`, `timeFormatOptions`, `defaultDateTimePreferences`, `DateFormatId`, `TimeFormatId` and `StandardDateTimePreferences`, plus `isTimeZone(value)` and `availableTimeZones()` (UTC first, then the runtime's IANA zones) for validating and listing time-zone preferences. API packages can import the subpath; keep request schemas in the app. Use this catalog for common preference controls instead of local option lists. See [forms](forms.md#display-preferences) for defaults, persistence and serialization boundaries.
 
 ### Common settings presentation
 
@@ -163,7 +170,7 @@ The React-free `utilities/date-time-preferences` public subpath and root export 
 
 `teamRoleOptions` (`patterns/team-settings/team-role-options`) supplies Admin, Member and Viewer with 16px icons and short generic descriptions for invitation and member-edit pickers. Applications retain their existing permission enforcement.
 
-`McpGuideSettings` (`patterns/account-settings/mcp-guide-settings`) owns the client selector, configuration code and MCP setup and troubleshooting link. The selector is compact on desktop and full width on mobile; configuration code retains the widget width. Pass app-owned `configurations` and `documentationUrl`; configuration entries contain `id`, `label`, optional `icon`, `filename` and `code`. Keep additional connection prose in the documentation.
+`McpGuideSettings` (`patterns/account-settings/mcp-guide-settings`) owns the client selector, configuration code and MCP setup and troubleshooting link. The selector is compact on desktop and full width on mobile; configuration code retains the widget width. Pass app-owned `configurations` and `documentationUrl`; configuration entries contain `id`, `label`, optional `icon`, `filename` and `code`. `mcpClientConfigurations({ serverName, url })` (`utilities/mcp-client-presentation`) returns the standard Codex, Claude Code, Cursor, VS Code and Other clients entries for an app's server name and MCP URL, each with its `McpClientLogo`. Use `McpClientLogo` with the same client IDs elsewhere; unknown IDs show the generic MCP icon. Keep additional connection prose in the documentation.
 
 `McpConnectionsSettings` (`patterns/account-settings/mcp-connections-settings`) shows authorized MCP clients on their own account page. Pass `AuthorizedClient` items, `formatDate` and an awaited `onRevoke(id)`. A failed revocation keeps its confirmation available; refresh committed items after success. API Keys is for manually created keys.
 
