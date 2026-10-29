@@ -9,7 +9,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "ConnectedAccountSettings from @avgeek-oss/design-system/patterns/auth/connected shows the read-only profile from the session and this browser's session with Sign out, which goes on to the provider's logout URL. The auth client does not list other sessions yet, so there is no device list or Sign out everywhere. The example runs against an in-memory fake client.",
+          "ConnectedAccountSettings from @avgeek-oss/design-system/patterns/auth/connected shows the read-only profile from the session and the person's browser sessions from client.sessions, with the browser and operating system, This device on the current one, Sign out for each and Sign out everywhere. Ending this browser's session goes on to the provider's logout URL. The example runs against an in-memory fake client.",
       },
     },
   },
@@ -20,4 +20,9 @@ type Story = StoryObj;
 export const Master: Story = {
   name: "Master",
   render: () => <ConnectedAccountPreview />,
+};
+
+export const SessionsLoadFailure: Story = {
+  name: "Sessions load failure",
+  render: () => <ConnectedAccountPreview failLists />,
 };

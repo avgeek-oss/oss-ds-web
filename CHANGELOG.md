@@ -44,8 +44,10 @@ The auth, account and team patterns now match `@avgeek-oss/auth-core` and `@avge
 - Add `authRedirectErrorMessage(error, { productName, providerName })` with messages for every documented `auth_error` code and reason.
 - Add `StepUpDialog` (`patterns/auth/step-up-dialog`).
 - Add `RotateApiKeyDialog` and `apiKeyGraceOptions` (`patterns/account-settings/rotate-api-key-dialog`), and `isApiKeyUsable`.
-- Add `PeopleDirectory` and `WorkspaceMembersSettings`, and the `people` settings section.
-- Add the connected containers in `@avgeek-oss/design-system/patterns/auth/connected`: `ConnectedSignIn`, `ConnectedMcpConsent`, `ConnectedAccountSettings`, `ConnectedApiKeysSettings` and `ConnectedMcpConnections`. They take an `AuthClient` from `@avgeek-oss/auth-client` and handle loading, errors, step-up with resume on return, and optimistic revocation. `@avgeek-oss/auth-client` `^0.1.0` is an optional peer used for types only: apps that do not import this subpath do not need it.
+- Add `PeopleDirectory` and `WorkspaceMembersSettings`, and the `people` settings section. `DirectoryPerson` takes the auth client's `roleSource` (`claims`, `scim` or `app`) and `status` (`active`, `suspended`, `deactivated` or `deleted`, exported as `DirectoryStatus`), with a Deleted badge.
+- Add the connected containers in `@avgeek-oss/design-system/patterns/auth/connected`: `ConnectedSignIn`, `ConnectedMcpConsent`, `ConnectedAccountSettings`, `ConnectedApiKeysSettings`, `ConnectedMcpConnections` and `ConnectedPeopleDirectory`. They take an `AuthClient` from `@avgeek-oss/auth-client` and handle loading, errors, step-up with resume on return, and optimistic revocation. `@avgeek-oss/auth-client` `^0.2.0` is an optional peer used for types only: apps that do not import this subpath do not need it.
+- `ConnectedAccountSettings` lists the person's sessions from `client.sessions` by browser and operating system, with Sign out for each and Sign out everywhere; ending this browser's session goes on to the provider's logout URL.
+- `ConnectedPeopleDirectory` shows the admins' directory from `client.admin.users`, with a debounced search, a status filter and cursor pages. Workspace membership stays with the app through `WorkspaceMembersSettings`.
 
 ## 1.4.0 (2026-10-28)
 

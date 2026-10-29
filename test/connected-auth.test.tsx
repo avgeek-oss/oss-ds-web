@@ -9,13 +9,16 @@ import {
   ConnectedApiKeysSettings,
   ConnectedMcpConnections,
   ConnectedMcpConsent,
+  ConnectedPeopleDirectory,
   ConnectedSignIn,
 } from "../src/patterns/auth/connected.js";
 import {
   createFakeAuthClient,
+  fakeActiveSession,
   fakeApiKey,
   fakeConnectedApp,
   fakeConsentRequest,
+  fakeDirectoryUser,
   type FakeAuthClientOptions,
 } from "../studio/fake-auth-client.js";
 
@@ -37,6 +40,12 @@ beforeEach(() => {
 });
 afterEach(() => mock.restoreAll());
 
+async function wait(ms: number) {
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+  });
+  await settle();
+}
 async function settle() {
   for (let round = 0; round < 6; round++)
     await act(async () => {
@@ -504,25 +513,274 @@ test("disconnecting an app removes it, and a failure brings it back with one toa
   }
 });
 
-test("account settings show the provider profile and sign out to the provider's logout", async () => {
-  const auth = client({ role: "member" });
-  const view = await mount(
-    <ConnectedAccountSettings
-      client={auth}
-      navigate={navigate}
-      providerName="authentik"
-      formatDate={formatDate}
-    />,
-  );
+const thisBrowser = fakeActiveSession({
+  id: "4c3b2a19-0000-4000-8000-000000000001",
+  current: true,
+});
+const phone = fakeActiveSession({
+  id: "4c3b2a19-0000-4000-8000-000000000002",
+  browser: "Safari",
+  os: "iOS",
+});
+const accountSettings = (
+  options: FakeAuthClientOptions,
+  signedOutUrl?: string,
+) => {
+  const auth = client({
+    role: "member",
+    sessions: [thisBrowser, phone],
+    ...options,
+  });
+  return {
+    auth,
+    view: () =>
+      mount(
+        <ConnectedAccountSettings
+          client={auth}
+          navigate={navigate}
+          providerName="authentik"
+          formatDate={formatDate}
+          signedOutUrl={signedOutUrl}
+        />,
+      ),
+  };
+};
+
+test("account settings load the profile and every session, with the browser, operating system and this device", async () => {
+  const { view } = accountSettings({ latencyMs: 50 });
+  const settings = await view();
   try {
+    assert.match(text(), /Loading your account/);
+    await wait(120);
     assert.match(text(), /Ada Lovelace/);
     assert.match(text(), /ada@example\.test/);
-    assert.match(text(), /This browser/);
+    assert.match(text(), /Firefox on macOS/);
+    assert.match(text(), /Safari on iOS/);
+    assert.match(text(), /This device/);
+    assert.ok(button("Sign out everywhere"));
+  } finally {
+    await settings.unmount();
+  }
+});
+
+test("a failed session list keeps the profile and offers a retry", async () => {
+  const { view } = accountSettings({ failLists: true });
+  const settings = await view();
+  try {
+    assert.match(text(), /Ada Lovelace/);
+    assert.match(text(), /The service is busy/);
+    assert.ok(button("Retry"));
     assert.doesNotMatch(text(), /Sign out everywhere/);
+  } finally {
+    await settings.unmount();
+  }
+});
+
+test("signing out another session removes it and stays on the page; a failure brings it back with one toast", async () => {
+  const { auth, view } = accountSettings({});
+  const settings = await view();
+  try {
+    const row = [...document.querySelectorAll("tr")].find((item) =>
+      item.textContent?.includes("Safari on iOS"),
+    );
+    const signOut = row?.querySelector("button");
+    assert.ok(signOut);
+    await click(signOut);
     await click(button("Sign out"));
-    assert.ok(auth.calls.includes("signOut"));
+    assert.ok(auth.calls.includes(`sessions.revoke ${phone.id}`));
+    assert.doesNotMatch(text(), /Safari on iOS/);
+    assert.deepEqual(visited, []);
+  } finally {
+    await settings.unmount();
+  }
+  const failing = accountSettings({ failChanges: "unavailable" });
+  const again = await failing.view();
+  try {
+    const row = [...document.querySelectorAll("tr")].find((item) =>
+      item.textContent?.includes("Safari on iOS"),
+    );
+    const signOut = row?.querySelector("button");
+    assert.ok(signOut);
+    await click(signOut);
+    await click(button("Sign out"));
+    assert.deepEqual(dangerMessages, ["The change failed. Try again."]);
+    assert.match(text(), /Safari on iOS/);
+    assert.deepEqual(visited, []);
+  } finally {
+    await again.unmount();
+  }
+});
+
+test("signing out this browser revokes its session and goes to the provider's logout, or to signedOutUrl without one", async () => {
+  const withLogout = accountSettings({});
+  const settings = await withLogout.view();
+  try {
+    const row = [...document.querySelectorAll("tr")].find((item) =>
+      item.textContent?.includes("This device"),
+    );
+    const signOut = row?.querySelector("button");
+    assert.ok(signOut);
+    await click(signOut);
+    assert.ok(
+      withLogout.auth.calls.includes(`sessions.revoke ${thisBrowser.id}`),
+    );
     assert.deepEqual(visited, ["fake://provider/logout"]);
   } finally {
-    await view.unmount();
+    await settings.unmount();
+  }
+  visited = [];
+  const withoutLogout = accountSettings({ endSessionUrl: null }, "/signed-out");
+  const again = await withoutLogout.view();
+  try {
+    const row = [...document.querySelectorAll("tr")].find((item) =>
+      item.textContent?.includes("This device"),
+    );
+    const signOut = row?.querySelector("button");
+    assert.ok(signOut);
+    await click(signOut);
+    assert.deepEqual(visited, ["/signed-out"]);
+  } finally {
+    await again.unmount();
+  }
+});
+
+test("signing out everywhere ends every session and leaves through the provider's logout", async () => {
+  const { auth, view } = accountSettings({});
+  const settings = await view();
+  try {
+    await click(button("Sign out everywhere"));
+    await click(button("Sign out everywhere"));
+    assert.ok(auth.calls.includes("sessions.signOutEverywhere"));
+    assert.deepEqual(visited, ["fake://provider/logout"]);
+  } finally {
+    await settings.unmount();
+  }
+});
+
+const directory = Array.from({ length: 7 }, (_, index) =>
+  fakeDirectoryUser({
+    id: `0b6c3f1e-5d55-4c39-9a51-8d1f7e0c2a${String(11 + index)}`,
+    displayName: index === 0 ? "Ada Lovelace" : `Person ${index}`,
+    email: index === 0 ? "ada@example.test" : `person${index}@example.test`,
+    role: index === 3 ? null : "member",
+    status: index === 3 ? "suspended" : index === 4 ? "deactivated" : "active",
+    roleSource: index === 5 ? "claims" : "scim",
+  }),
+);
+const peopleDirectory = (options: FakeAuthClientOptions = {}) => {
+  const auth = client({ users: directory, ...options });
+  return {
+    auth,
+    view: () =>
+      mount(
+        <ConnectedPeopleDirectory
+          client={auth}
+          navigate={navigate}
+          providerName="authentik"
+          formatDate={formatDate}
+          pageSize={5}
+        />,
+      ),
+  };
+};
+const listCalls = (calls: string[]) =>
+  calls.filter((call) => call.startsWith("admin.users.list"));
+
+test("the people directory shows a page with status, source and the managed-in note, and pages by cursor", async () => {
+  const { auth, view } = peopleDirectory({ latencyMs: 50 });
+  const people = await view();
+  try {
+    assert.match(text(), /Loading people/);
+    await wait(120);
+    assert.match(text(), /Ada Lovelace \(you\)/);
+    assert.match(text(), /Access is managed in authentik/);
+    assert.match(text(), /Suspended/);
+    assert.match(text(), /Deactivated/);
+    assert.match(text(), /SCIM/);
+    assert.doesNotMatch(text(), /Person 6/);
+    await click(button("Next"));
+    await wait(120);
+    assert.ok(
+      listCalls(auth.calls).includes("admin.users.list q= status= cursor=5"),
+    );
+    assert.match(text(), /Person 6/);
+    assert.match(text(), /Sign-in/);
+    assert.doesNotMatch(text(), /Ada Lovelace/);
+    await click(button("Previous"));
+    await wait(120);
+    assert.equal(
+      listCalls(auth.calls).at(-1),
+      "admin.users.list q= status= cursor=",
+    );
+    assert.match(text(), /Ada Lovelace/);
+  } finally {
+    await people.unmount();
+  }
+});
+
+test("the directory search waits for typing to pause, and the status filter starts again from the first page", async () => {
+  const { auth, view } = peopleDirectory();
+  const people = await view();
+  try {
+    const input = document.querySelector<HTMLInputElement>(
+      'input[type="search"]',
+    );
+    assert.ok(input);
+    for (const value of ["p", "pe", "person 2"]) {
+      await act(async () => {
+        // oxlint-disable-next-line typescript/unbound-method -- the native value setter is called with .call(element, value)
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          "value",
+        )?.set;
+        assert.ok(setter);
+        setter.call(input, value);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+    }
+    await settle();
+    assert.ok(!auth.calls.some((call) => call.includes("q=p")));
+    await wait(350);
+    assert.ok(
+      listCalls(auth.calls).includes(
+        "admin.users.list q=person 2 status= cursor=",
+      ),
+    );
+    assert.ok(!auth.calls.some((call) => / q=pe? /.test(call)));
+    assert.match(text(), /Person 2/);
+    assert.doesNotMatch(text(), /Ada Lovelace/);
+    await choose("Suspended");
+    await settle();
+    assert.ok(
+      listCalls(auth.calls).includes(
+        "admin.users.list q=person 2 status=suspended cursor=",
+      ),
+    );
+    assert.match(text(), /No people yet/);
+    assert.match(text(), /Try a different search or change the status/);
+  } finally {
+    await people.unmount();
+  }
+});
+
+test("the directory tells a non-admin it is for admins, and a failed load offers a retry", async () => {
+  const member = peopleDirectory({ role: "member" });
+  const people = await member.view();
+  try {
+    assert.match(text(), /Only admins can see the people directory/);
+    assert.equal(document.querySelectorAll("button").length, 0);
+  } finally {
+    await people.unmount();
+  }
+  const failing = peopleDirectory({ failLists: true });
+  const again = await failing.view();
+  try {
+    assert.match(text(), /The service is busy/);
+    assert.doesNotMatch(text(), /No people yet/);
+    const before = listCalls(failing.auth.calls).length;
+    await click(button("Retry"));
+    assert.ok(listCalls(failing.auth.calls).length > before);
+  } finally {
+    await again.unmount();
   }
 });

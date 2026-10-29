@@ -199,6 +199,7 @@ test("new public entry points resolve to their sources and the root carries the 
     "StepUpDialog",
     "RotateApiKeyDialog",
     "PeopleDirectory",
+    "DirectoryStatus",
     "WorkspaceMembersSettings",
   ])
     assert.match(root, new RegExp(`(?:[{,\\s]|as )${name}[\\s,}]`), name);
@@ -321,8 +322,23 @@ test("the auth client is an optional, type-only peer that only the connected sub
   const manifest = JSON.parse(await readFile("package.json", "utf8")) as {
     peerDependencies: Record<string, string>;
     peerDependenciesMeta: Record<string, { optional?: boolean }>;
+    devDependencies: Record<string, string>;
   };
-  assert.ok(manifest.peerDependencies["@avgeek-oss/auth-client"]);
+  // The containers are built and tested against the version installed here,
+  // so the peer range starts at it: sessions and the directory need 0.2.0.
+  assert.equal(
+    manifest.peerDependencies["@avgeek-oss/auth-client"],
+    `^${manifest.devDependencies["@avgeek-oss/auth-client"]}`,
+  );
+  const connected = await import("../src/patterns/auth/connected.js");
+  assert.deepEqual(Object.keys(connected).sort(), [
+    "ConnectedAccountSettings",
+    "ConnectedApiKeysSettings",
+    "ConnectedMcpConnections",
+    "ConnectedMcpConsent",
+    "ConnectedPeopleDirectory",
+    "ConnectedSignIn",
+  ]);
   assert.equal(
     manifest.peerDependenciesMeta["@avgeek-oss/auth-client"]?.optional,
     true,

@@ -22,4 +22,8 @@ export {
   ConnectedMcpConnections,
   type ConnectedMcpConnectionsProps,
 } from "./connected/mcp-connections.js";
+export {
+  ConnectedPeopleDirectory,
+  type ConnectedPeopleDirectoryProps,
+} from "./connected/people-directory.js";
 export type { ConnectedAuthClient, Navigate } from "./connected/shared.js";

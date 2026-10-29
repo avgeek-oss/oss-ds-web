@@ -6,4 +6,4 @@ Signed-in browsers and devices, with Sign out per session and Sign out everywher
 
 **Provide** `items` (`id`, `name`, optional `detail` and `signedInAt`, `lastActive`, `expiresAt`, `current`), `formatDate`, awaited `onSignOutCurrent`, optional `onSignOut(id)` and `onSignOutEverywhere`.
 
-**Don't** show actions the backend can't do; omit their callbacks.
+**Don't** show actions the backend can't do; omit their callbacks. `ConnectedAccountSettings` loads the sessions from the auth client and supplies all three.

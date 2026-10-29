@@ -75,8 +75,8 @@ importers:
         version: 4.6.7
     devDependencies:
       "@avgeek-oss/auth-client":
-        specifier: 0.1.0
-        version: 0.1.0(react@19.3.0)
+        specifier: 0.2.0
+        version: 0.2.0(react@19.3.0)
       "@playwright/test":
         specifier: 1.63.0
         version: 1.63.0
@@ -216,10 +216,10 @@ packages:
       }
     engines: { node: ^22.22.2 || ^24.15.0 || >=26.0.0 }
 
-  "@avgeek-oss/auth-client@0.1.0":
+  "@avgeek-oss/auth-client@0.2.0":
     resolution:
       {
-        integrity: sha512-FQH77Tt5UKe8qKfgmHHuHihzjroirM742bMmzog8+PI8pm3DnNKOqOF/VZX3FvyH6IABz+a1cA9a4xFkDqbCZA==,
+        integrity: sha512-Gx2yTY4U89DAorCgmERZjn7c3DfiB3sS/gob7xTUNeca55Ck9nKdjQrF63SlP28MOot+ieYmYnibQU0rYzziXg==,
       }
     peerDependencies:
       react: ^19.0.0
@@ -6041,7 +6041,7 @@ snapshots:
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.5.3
 
-  "@avgeek-oss/auth-client@0.1.0(react@19.3.0)":
+  "@avgeek-oss/auth-client@0.2.0(react@19.3.0)":
     optionalDependencies:
       react: 19.3.0
 

@@ -29,7 +29,7 @@ import "@avgeek-oss/design-system/styles.css";
 </Providers>;
 ```
 
-Sign-in is SSO only, through the organisation's identity provider, with the roles `viewer`, `member` and `admin`. With [`@avgeek-oss/auth-client`](https://github.com/avgeek-oss/oss-auth/tree/main/packages/auth-client), the containers in `@avgeek-oss/design-system/patterns/auth/connected` (such as `ConnectedSignIn` and `ConnectedApiKeysSettings`) take its `AuthClient` and do the requests, step-up and error handling. The auth client is an optional peer, needed only when you import that subpath:
+Sign-in is SSO only, through the organisation's identity provider, with the roles `viewer`, `member` and `admin`. With [`@avgeek-oss/auth-client`](https://github.com/avgeek-oss/oss-auth/tree/main/packages/auth-client), the containers in `@avgeek-oss/design-system/patterns/auth/connected` (such as `ConnectedSignIn`, `ConnectedApiKeysSettings` and `ConnectedPeopleDirectory`) take its `AuthClient` and do the requests, step-up and error handling. The auth client is an optional peer, `^0.2.0`, needed only when you import that subpath:
 
 ```sh
 pnpm add @avgeek-oss/auth-client

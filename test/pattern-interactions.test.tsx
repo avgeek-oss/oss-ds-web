@@ -536,7 +536,7 @@ test("the people directory is read-only, marks suspended and deactivated people 
       items={[
         person,
         { ...person, id: "lee", name: "Lee", role: null },
-        { ...person, id: "kim", name: "Kim", active: false },
+        { ...person, id: "kim", name: "Kim", status: "deactivated" as const },
       ]}
       providerName="authentik"
       currentUserId="alex"

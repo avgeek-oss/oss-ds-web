@@ -144,6 +144,7 @@ export {
   type PeopleDirectoryProps,
   type DirectoryPerson,
   type DirectoryRoleSource,
+  type DirectoryStatus,
 } from "./patterns/team-settings/people-directory.js";
 
 export {

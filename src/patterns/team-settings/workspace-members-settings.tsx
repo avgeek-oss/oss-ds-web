@@ -10,6 +10,7 @@ import { useConfirmationOpener } from "../account-settings/use-confirmation-open
 import {
   PeopleDirectory,
   personName,
+  personStatus,
   type DirectoryPerson,
 } from "./people-directory.js";
 
@@ -22,8 +23,8 @@ export type WorkspaceMembersSettingsProps<
   /** People in this workspace. */
   members: T[];
   /**
-   * Everyone in the directory. People with a role who are not members yet
-   * can be added.
+   * Everyone in the directory. Active people with a role who are not
+   * members yet can be added.
    */
   people: readonly DirectoryPerson[];
   formatDate: (value: string) => ReactNode;
@@ -54,7 +55,7 @@ export function WorkspaceMembersSettings<T extends DirectoryPerson>({
     (person) =>
       !memberIds.has(person.id) &&
       person.role !== null &&
-      person.active !== false,
+      personStatus(person) === "active",
   );
   return (
     <div className="grid gap-4">

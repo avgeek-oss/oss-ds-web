@@ -21,7 +21,7 @@ Apps fetch, authorize and persist; patterns own layout, copy and states.
 
 ## Team settings
 
-- `PeopleDirectory` is the read-only directory mirrored from the provider: role, source, last sign-in and a Suspended badge for people without a role.
+- `PeopleDirectory` is the read-only directory mirrored from the provider: role, source, last sign-in and Suspended, Deactivated or Deleted badges, with the auth client's `roleSource` and `status`.
 - Roles and app access are changed in the identity provider, never in the app; there are no invitations.
 - `WorkspaceMembersSettings` edits workspace membership, which the app owns.
 - Use `TeamGeneralSettings`; set `mode="details"` only if the server stores a description.
@@ -55,7 +55,7 @@ Apps fetch, authorize and persist; patterns own layout, copy and states.
 - Use `AccessDenied` when the provider has not given someone the app, their role was removed, or they were deactivated.
 - Use `StepUpDialog` for `step_up_required`: the person signs in again at the provider and the action finishes on return.
 - `McpAuthorization` shows the client, where it returns to, a localhost warning and a role ceiling capped at the person's role.
-- `patterns/auth/connected` containers take an `AuthClient` from `@avgeek-oss/auth-client` and do the data work.
+- `patterns/auth/connected` containers take an `AuthClient` from `@avgeek-oss/auth-client` `^0.2.0` and do the data work, including the person's sessions (`ConnectedAccountSettings`) and the admins' directory (`ConnectedPeopleDirectory`).
 
 ## Errors and loading
 

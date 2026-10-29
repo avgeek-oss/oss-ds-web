@@ -337,8 +337,8 @@ export const people: DirectoryPerson[] = [
     name: null,
     email: "kim@example.test",
     role: "viewer",
-    roleSource: "oidc",
-    active: false,
+    roleSource: "claims",
+    status: "deactivated",
     lastSignInAt: null,
   },
 ];

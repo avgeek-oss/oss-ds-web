@@ -4,11 +4,13 @@
 // auth-core.
 import {
   AuthClientError,
+  type ActiveSession,
   type ApiKey,
   type AuthClient,
   type AuthSession,
   type ConnectedApp,
   type ConsentRequest,
+  type DirectoryUser,
   type Role,
 } from "@avgeek-oss/auth-client";
 
@@ -19,6 +21,10 @@ export type FakeAuthClientOptions = {
   apiKeys?: ApiKey[];
   connectedApps?: ConnectedApp[];
   consent?: ConsentRequest | null;
+  /** The person's sessions; the one with `current` is this page's. */
+  sessions?: ActiveSession[];
+  /** The people directory, newest first, for admins. */
+  users?: DirectoryUser[];
   /** Makes every list request fail. */
   failLists?: boolean;
   /** Makes every change fail with this code. */
@@ -98,6 +104,37 @@ export const fakeConnectedApp = (
   ...overrides,
 });
 
+export const fakeActiveSession = (
+  overrides: Partial<ActiveSession> = {},
+): ActiveSession => ({
+  id: "4c3b2a19-0000-4000-8000-000000000001",
+  createdAt: "2026-10-29T08:00:00Z",
+  lastSeenAt: "2026-10-29T09:00:00Z",
+  idleExpiresAt: "2026-10-29T17:00:00Z",
+  expiresAt: "2026-10-29T20:00:00Z",
+  authenticatedAt: "2026-10-29T08:00:00Z",
+  browser: "Firefox",
+  os: "macOS",
+  current: false,
+  ...overrides,
+});
+
+export const fakeDirectoryUser = (
+  overrides: Partial<DirectoryUser> = {},
+): DirectoryUser => ({
+  id: "0b6c3f1e-5d55-4c39-9a51-8d1f7e0c2a11",
+  displayName: "Ada Lovelace",
+  email: "ada@example.test",
+  role: "admin",
+  roleSource: "scim",
+  status: "active",
+  createdAt: "2026-09-01T10:00:00Z",
+  lastSignInAt: "2026-10-29T08:00:00Z",
+  deactivatedAt: null,
+  deletedAt: null,
+  ...overrides,
+});
+
 export function createFakeAuthClient(
   options: FakeAuthClientOptions = {},
 ): FakeAuthClient {
@@ -105,6 +142,8 @@ export function createFakeAuthClient(
   const latency = options.latencyMs ?? 0;
   let keys = [...(options.apiKeys ?? [])];
   let apps = [...(options.connectedApps ?? [])];
+  let sessions = [...(options.sessions ?? [])];
+  const users = [...(options.users ?? [])];
   let recent = false;
   let sequence = 0;
   const calls: string[] = [];
@@ -153,12 +192,16 @@ export function createFakeAuthClient(
     keys = [apiKey, ...keys];
     return { key: `fake_${apiKey.id}_secret`, apiKey };
   };
-  const list = <T>(name: string, items: () => T[]) =>
+  const list = <T>(name: string, items: () => T) =>
     call(name, () => {
       if (options.failLists)
         throw fail("unavailable", 503, "The service is busy. Try again.");
       return items();
     });
+  const logoutUrl = () =>
+    options.endSessionUrl === undefined
+      ? "fake://provider/logout"
+      : options.endSessionUrl;
   return {
     calls,
     confirmRecentSignIn: () => {
@@ -178,12 +221,27 @@ export function createFakeAuthClient(
       `fake://sign-in?returnTo=${encodeURIComponent(returnTo ?? "")}`,
     stepUpUrl: (returnTo) =>
       `fake://step-up?returnTo=${encodeURIComponent(returnTo ?? "")}`,
-    signOut: () =>
-      call("signOut", () =>
-        options.endSessionUrl === undefined
-          ? "fake://provider/logout"
-          : options.endSessionUrl,
-      ),
+    signOut: () => call("signOut", logoutUrl),
+    sessions: {
+      list: () => list("sessions.list", () => [...sessions]),
+      revoke: (id) =>
+        call(`sessions.revoke ${id}`, () => {
+          change(null);
+          const session = sessions.find((item) => item.id === id);
+          if (!session) throw fail("not_found", 404, "No such session.");
+          sessions = sessions.filter((item) => item.id !== id);
+          return session.current
+            ? { current: true, endSessionUrl: logoutUrl() }
+            : { current: false, endSessionUrl: null };
+        }),
+      signOutEverywhere: () =>
+        call("sessions.signOutEverywhere", () => {
+          change(null);
+          const revoked = sessions.length;
+          sessions = [];
+          return { revoked, endSessionUrl: logoutUrl() };
+        }),
+    },
     apiKeys: {
       list: () => list("apiKeys.list", () => [...keys]),
       create: (input) =>
@@ -257,6 +315,36 @@ export function createFakeAuthClient(
       connectedApps: {
         list: () => list("admin.connectedApps.list", () => [...apps]),
         revoke: (id) => call(`admin.connectedApps.revoke ${id}`, () => {}),
+      },
+      users: {
+        // Cursors are offsets here; auth-core's are opaque.
+        list: (input = {}) =>
+          list(
+            `admin.users.list q=${input.q ?? ""} status=${input.status ?? ""} cursor=${input.cursor ?? ""}`,
+            () => {
+              if (role !== "admin")
+                throw fail(
+                  "forbidden",
+                  403,
+                  "This needs the admin role or higher.",
+                );
+              const q = input.q?.trim().toLowerCase() ?? "";
+              const matching = users.filter(
+                (user) =>
+                  (!input.status || user.status === input.status) &&
+                  (!q ||
+                    [user.displayName, user.email].some((value) =>
+                      value?.toLowerCase().includes(q),
+                    )),
+              );
+              const start = Number(input.cursor ?? 0);
+              const end = start + (input.limit ?? 50);
+              return {
+                users: matching.slice(start, end),
+                nextCursor: end < matching.length ? String(end) : null,
+              };
+            },
+          ),
       },
     },
   };

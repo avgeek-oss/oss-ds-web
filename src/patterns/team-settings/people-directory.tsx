@@ -12,8 +12,19 @@ import { actionColumn } from "../settings/table-actions.js";
 import { InlineExternalLink } from "../../navigation/inline-external-link.js";
 import { teamRoleOptions, type TeamRole } from "./team-role-options.js";
 
-/** Where a person's role was last set: sign-in claims, SCIM or an app admin. */
-export type DirectoryRoleSource = "oidc" | "scim" | "admin";
+/**
+ * Where a person's role came from: the role claim at sign-in, SCIM group
+ * membership or the app itself, in the auth client's words.
+ */
+export type DirectoryRoleSource = "claims" | "scim" | "app";
+
+/**
+ * Where a person stands: `suspended` has no access until the provider
+ * assigns a role, `deactivated` is inactive at the provider and `deleted`
+ * was removed there.
+ */
+export type DirectoryStatus =
+  "active" | "suspended" | "deactivated" | "deleted";
 
 /** A person mirrored from the identity provider. */
 export type DirectoryPerson = {
@@ -23,8 +34,8 @@ export type DirectoryPerson = {
   /** Their role in the app; `null` means suspended (no access). */
   role: TeamRole | null;
   roleSource?: DirectoryRoleSource | null;
-  /** `false` when the provider deactivated them. */
-  active?: boolean;
+  /** Default `suspended` without a role, otherwise `active`. */
+  status?: DirectoryStatus;
   lastSignInAt: string | null;
   avatarUrl?: string;
 };
@@ -47,13 +58,62 @@ export type PeopleDirectoryProps<T extends DirectoryPerson = DirectoryPerson> =
   };
 
 const sourceLabels: Record<DirectoryRoleSource, string> = {
-  oidc: "Sign-in",
+  claims: "Sign-in",
   scim: "SCIM",
-  admin: "App admin",
+  app: "App",
 };
 
 export function personName(person: DirectoryPerson): string {
   return person.name?.trim() || person.email || "Unnamed";
+}
+
+/** The person's status, `suspended` when it is not given and they have no role. */
+export function personStatus(person: DirectoryPerson): DirectoryStatus {
+  return person.status ?? (person.role === null ? "suspended" : "active");
+}
+
+const statusBadges: Record<
+  Exclude<DirectoryStatus, "active">,
+  {
+    label: string;
+    color: "danger" | "warning";
+    description: (provider: string) => string;
+  }
+> = {
+  suspended: {
+    label: "Suspended",
+    color: "warning",
+    description: (provider) => `No access until ${provider} assigns a role.`,
+  },
+  deactivated: {
+    label: "Deactivated",
+    color: "danger",
+    description: (provider) => `Deactivated in ${provider}.`,
+  },
+  deleted: {
+    label: "Deleted",
+    color: "danger",
+    description: (provider) => `Deleted in ${provider}.`,
+  },
+};
+
+function PersonStatus({
+  status,
+  providerName,
+}: {
+  status: DirectoryStatus;
+  providerName: string;
+}) {
+  if (status === "active") return null;
+  const badge = statusBadges[status];
+  return (
+    <StatusIndicator
+      className="w-fit"
+      label={badge.label}
+      color={badge.color}
+      description={badge.description(providerName)}
+    />
+  );
 }
 
 export function PeopleDirectory<T extends DirectoryPerson>({
@@ -87,21 +147,10 @@ export function PeopleDirectory<T extends DirectoryPerson>({
                 name={item.id === currentUserId ? `${name} (you)` : name}
                 description={item.email ?? undefined}
               />
-              {item.active === false ? (
-                <StatusIndicator
-                  className="w-fit"
-                  label="Deactivated"
-                  color="danger"
-                  description={`Deactivated in ${providerName}.`}
-                />
-              ) : item.role === null ? (
-                <StatusIndicator
-                  className="w-fit"
-                  label="Suspended"
-                  color="warning"
-                  description={`No role, so no access. Assign one in ${providerName}.`}
-                />
-              ) : null}
+              <PersonStatus
+                status={personStatus(item)}
+                providerName={providerName}
+              />
             </div>
           </div>
         );

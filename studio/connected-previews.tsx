@@ -5,14 +5,17 @@ import {
   ConnectedApiKeysSettings,
   ConnectedMcpConnections,
   ConnectedMcpConsent,
+  ConnectedPeopleDirectory,
   ConnectedSignIn,
 } from "../src/patterns/auth/connected";
 import { authPreviewBrand, previewProvider } from "./auth-previews";
 import {
   createFakeAuthClient,
+  fakeActiveSession,
   fakeApiKey,
   fakeConnectedApp,
   fakeConsentRequest,
+  fakeDirectoryUser,
   type FakeAuthClient,
   type FakeAuthClientOptions,
 } from "./fake-auth-client";
@@ -106,9 +109,38 @@ export function ConnectedConsentPreview({
   );
 }
 
-export function ConnectedAccountPreview() {
+export const previewSessions = [
+  fakeActiveSession({
+    id: "4c3b2a19-0000-4000-8000-000000000001",
+    current: true,
+  }),
+  fakeActiveSession({
+    id: "4c3b2a19-0000-4000-8000-000000000002",
+    createdAt: "2026-10-27T18:20:00Z",
+    lastSeenAt: "2026-10-28T21:05:00Z",
+    idleExpiresAt: "2026-10-29T05:05:00Z",
+    expiresAt: "2026-10-30T06:20:00Z",
+    browser: "Safari",
+    os: "iOS",
+  }),
+  fakeActiveSession({
+    id: "4c3b2a19-0000-4000-8000-000000000003",
+    createdAt: "2026-10-20T09:00:00Z",
+    lastSeenAt: "2026-10-26T12:30:00Z",
+    browser: null,
+    os: null,
+  }),
+];
+
+export function ConnectedAccountPreview({
+  failLists = false,
+}: {
+  failLists?: boolean;
+}) {
   return (
-    <ConnectedFixture options={{ role: "member" }}>
+    <ConnectedFixture
+      options={{ role: "member", sessions: previewSessions, failLists }}
+    >
       {(client, navigate) => (
         <div className="max-w-3xl p-4">
           <ConnectedAccountSettings
@@ -117,6 +149,55 @@ export function ConnectedAccountPreview() {
             providerName={previewProvider}
             manageUrl="https://auth.example.test/if/user/"
             formatDate={formatDate}
+          />
+        </div>
+      )}
+    </ConnectedFixture>
+  );
+}
+
+const directoryNames = [
+  ["Ada Lovelace", "ada"],
+  ["Sam Chen", "sam"],
+  ["Lee Okafor", "lee"],
+  ["Kim Park", "kim"],
+  ["Noor Haddad", "noor"],
+  ["Grace Hopper", "grace"],
+  ["Alan Turing", "alan"],
+  ["Katherine Johnson", "katherine"],
+] as const;
+
+export const previewDirectory = directoryNames.map(([name, handle], index) =>
+  fakeDirectoryUser({
+    id: `0b6c3f1e-5d55-4c39-9a51-8d1f7e0c2a${String(11 + index)}`,
+    displayName: name,
+    email: `${handle}@example.test`,
+    role: index === 0 ? "admin" : index === 2 ? null : "member",
+    roleSource: index === 4 ? "claims" : "scim",
+    status: index === 2 ? "suspended" : index === 3 ? "deactivated" : "active",
+    lastSignInAt:
+      index === 4 ? null : `2026-10-${String(28 - index)}T09:00:00Z`,
+  }),
+);
+
+export function ConnectedPeoplePreview({
+  role = "admin",
+  failLists = false,
+}: {
+  role?: "admin" | "member";
+  failLists?: boolean;
+}) {
+  return (
+    <ConnectedFixture options={{ role, users: previewDirectory, failLists }}>
+      {(client, navigate) => (
+        <div className="p-4">
+          <ConnectedPeopleDirectory
+            client={client}
+            navigate={navigate}
+            providerName={previewProvider}
+            manageUrl="https://auth.example.test/if/admin/"
+            formatDate={formatDate}
+            pageSize={5}
           />
         </div>
       )}
