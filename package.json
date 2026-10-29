@@ -1,6 +1,6 @@
 {
   "name": "@avgeek-oss/design-system",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Shared React components, application layouts and UI patterns for Avgeek OSS apps.",
   "type": "module",
   "license": "Apache-2.0",
