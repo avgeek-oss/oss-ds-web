@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0 (2026-10-29)
 
 - Breaking: the package now requires Node 26 or later.
 - `ButtonLink` now applies a `style` render-prop function, which it previously dropped. Object styles are unchanged.
